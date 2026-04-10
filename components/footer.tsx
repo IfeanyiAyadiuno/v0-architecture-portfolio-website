@@ -1,0 +1,66 @@
+"use client"
+
+import { motion } from "framer-motion"
+import Link from "next/link"
+
+export function Footer() {
+  return (
+    <motion.footer
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8 }}
+      className="py-20 px-6 border-t border-[#333333]"
+    >
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="space-y-4">
+            <h3 className="font-[family-name:var(--font-space-grotesk)] text-lg font-bold uppercase tracking-[0.05em] text-white">
+              [Your Name]
+            </h3>
+            <div className="space-y-2 font-mono text-sm text-[#AAAAAA]">
+              <p>
+                <Link
+                  href="mailto:hello@example.com"
+                  className="hover:text-white transition-colors relative group"
+                >
+                  hello@example.com
+                  <span className="absolute left-0 -bottom-px w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
+                </Link>
+              </p>
+              <p>
+                <Link
+                  href="https://linkedin.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors relative group"
+                >
+                  LinkedIn
+                  <span className="absolute left-0 -bottom-px w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
+                </Link>
+                {" / "}
+                <Link
+                  href="https://archinect.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors relative group"
+                >
+                  Archinect
+                  <span className="absolute left-0 -bottom-px w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
+                </Link>
+              </p>
+            </div>
+            <button className="mt-4 px-6 py-3 border border-white text-white font-mono text-sm uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-all duration-300">
+              PDF Portfolio Download
+            </button>
+          </div>
+
+          <div className="flex flex-col justify-end items-start md:items-end space-y-2 font-mono text-sm text-[#AAAAAA]">
+            <p>&copy; 2025</p>
+            <p>Built with Next.js + Framer Motion</p>
+          </div>
+        </div>
+      </div>
+    </motion.footer>
+  )
+}
