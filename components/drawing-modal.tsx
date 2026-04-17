@@ -11,14 +11,30 @@ import {
   type DrawingProject,
   kindToSlug,
 } from "@/lib/data"
+import { isPdfPath, pdfIframeSrc } from "@/lib/utils"
 
 interface DrawingModalProps {
   project: DrawingProject | null
   onClose: () => void
+  /**
+   * When true, navigating to a drawing kind adds `?reopen=<id>` so the kind page
+   * can send users back to the project modal (not only the drawings grid).
+   */
+  linkKindReturnToIndexModal?: boolean
+  /**
+   * Where the project modal lives: `drawings-index` → `?project=` on `/drawings-index`;
+   * `home` → `?project=` on `/` (Technical Drawings on the home page).
+   */
+  kindReturnOrigin?: "drawings-index" | "home"
 }
 
 /** Choose drawing type (stacked controls); navigates to `/drawings-index/[id]/[slug]`. */
-export function DrawingModal({ project, onClose }: DrawingModalProps) {
+export function DrawingModal({
+  project,
+  onClose,
+  linkKindReturnToIndexModal = false,
+  kindReturnOrigin = "drawings-index",
+}: DrawingModalProps) {
   const router = useRouter()
 
   const availableKinds = useMemo(() => {
@@ -28,12 +44,23 @@ export function DrawingModal({ project, onClose }: DrawingModalProps) {
 
   if (!project) return null
 
+  const coverSrc = coverImageForProject(project)
+  const coverIsPdf = isPdfPath(coverSrc)
+
   const categoryLabel =
     project.category === "commercial" ? "Commercial" : "Residential"
 
   const openKind = (slug: string) => {
     onClose()
-    router.push(`/drawings-index/${project.id}/${slug}`)
+    let query = ""
+    if (linkKindReturnToIndexModal === true) {
+      const q = new URLSearchParams({ reopen: String(project.id) })
+      if (kindReturnOrigin === "home") {
+        q.set("returnTo", "home")
+      }
+      query = `?${q.toString()}`
+    }
+    router.push(`/drawings-index/${project.id}/${slug}${query}`)
   }
 
   return (
@@ -65,13 +92,24 @@ export function DrawingModal({ project, onClose }: DrawingModalProps) {
 
           <div className="flex flex-col gap-10 p-6 pt-16 md:flex-row md:items-stretch md:gap-12 md:p-10 md:pt-10">
             <div className="min-w-0 flex-1 space-y-4">
-              <div className="relative aspect-[4/3] w-full max-w-xl bg-[#0a0a0a]">
-                <Image
-                  src={coverImageForProject(project)}
-                  alt={project.title}
-                  fill
-                  className="object-cover"
-                />
+              <div className="relative aspect-[4/3] w-full max-w-xl overflow-hidden bg-[#0a0a0a]">
+                {coverIsPdf ? (
+                  <iframe
+                    title={`${project.title} — preview`}
+                    src={pdfIframeSrc(coverSrc, {
+                      view: "Fit",
+                      compactUi: true,
+                    })}
+                    className="absolute inset-0 h-full w-full border-0 bg-black"
+                  />
+                ) : (
+                  <Image
+                    src={coverSrc}
+                    alt={project.title}
+                    fill
+                    className="object-contain"
+                  />
+                )}
               </div>
               <div>
                 <h3 className="font-[family-name:var(--font-space-grotesk)] text-xl font-bold uppercase tracking-[0.05em] text-white md:text-2xl">

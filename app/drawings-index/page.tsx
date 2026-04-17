@@ -1,50 +1,55 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, Suspense } from "react"
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
-import Image from "next/image"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { CustomCursor } from "@/components/custom-cursor"
 import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 import { DrawingModal } from "@/components/drawing-modal"
+import { DrawingProjectCard } from "@/components/drawing-project-card"
 import {
   allDrawingProjects,
   commercialProjects,
   residentialProjects,
-  coverImageForProject,
-  DRAWING_KINDS,
-  type DrawingKind,
+  getDrawingProjectById,
   type DrawingProject,
 } from "@/lib/data"
 import { ChevronDown } from "lucide-react"
-
-const filterOptions = [
-  "All",
-  "Commercial",
-  "Residential",
-  "Plan",
-  "Section",
-  "Elevation",
-  "Detail",
-] as const
 
 const sortOptions = [
   { label: "Project", value: "title" as const },
   { label: "Year", value: "year" as const },
 ]
 
-function isDrawingKind(value: string): value is DrawingKind {
-  return (DRAWING_KINDS as readonly string[]).includes(value)
-}
-
-export default function DrawingsIndexPage() {
+function DrawingsIndexContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeFilter, setActiveFilter] = useState<string>("All")
   const [sortBy, setSortBy] = useState<"title" | "year">("title")
   const [selectedProject, setSelectedProject] = useState<DrawingProject | null>(
     null
   )
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    const raw = searchParams.get("project")
+    if (raw == null || raw === "") return
+    const id = Number(raw)
+    if (!Number.isFinite(id)) return
+    const p = getDrawingProjectById(id)
+    if (!p) return
+    setSelectedProject(p)
+    router.replace("/drawings-index", { scroll: false })
+  }, [searchParams, router])
+
+  const filterOptions = useMemo(() => {
+    const base = ["All", "Commercial"] as const
+    return residentialProjects.length > 0
+      ? ([...base, "Residential"] as const)
+      : base
+  }, [residentialProjects.length])
 
   const filteredAndSortedProjects = useMemo(() => {
     let filtered: DrawingProject[] = [...allDrawingProjects]
@@ -53,8 +58,6 @@ export default function DrawingsIndexPage() {
       filtered = commercialProjects
     } else if (activeFilter === "Residential") {
       filtered = residentialProjects
-    } else if (activeFilter !== "All" && isDrawingKind(activeFilter)) {
-      filtered = allDrawingProjects.filter((p) => p.drawings[activeFilter])
     }
 
     return [...filtered].sort((a, b) => {
@@ -160,42 +163,17 @@ export default function DrawingsIndexPage() {
             <LayoutGroup>
               <motion.div
                 layout
-                className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4"
+                className="grid grid-cols-2 items-start gap-5 md:grid-cols-3 lg:grid-cols-4"
               >
                 <AnimatePresence mode="popLayout">
                   {filteredAndSortedProjects.map((project) => (
-                    <motion.div
+                    <DrawingProjectCard
                       key={project.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                      className="group"
-                      onClick={() => setSelectedProject(project)}
-                      data-clickable="true"
-                    >
-                      <div className="relative aspect-square overflow-hidden border border-[#333333] bg-black transition-colors duration-300 group-hover:border-white">
-                        <Image
-                          src={coverImageForProject(project)}
-                          alt={project.title}
-                          fill
-                          className="object-cover opacity-70 transition-all duration-300 group-hover:scale-[1.02] group-hover:opacity-100"
-                        />
-                      </div>
-                      <div className="mt-3 space-y-1">
-                        <p className="truncate font-mono text-xs text-white">
-                          {project.title}
-                        </p>
-                        <p className="font-mono text-[10px] uppercase text-[#AAAAAA]">
-                          {project.year} — {project.category}
-                        </p>
-                      </div>
-                    </motion.div>
+                      layout="index"
+                      project={project}
+                      onSelect={setSelectedProject}
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                    />
                   ))}
                 </AnimatePresence>
               </motion.div>
@@ -223,9 +201,18 @@ export default function DrawingsIndexPage() {
       {selectedProject && (
         <DrawingModal
           project={selectedProject}
+          linkKindReturnToIndexModal
           onClose={() => setSelectedProject(null)}
         />
       )}
     </>
+  )
+}
+
+export default function DrawingsIndexPage() {
+  return (
+    <Suspense fallback={null}>
+      <DrawingsIndexContent />
+    </Suspense>
   )
 }

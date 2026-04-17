@@ -1,6 +1,8 @@
-// —— Technical drawings: project-first model (Plan / Section / Elevation / Detail) ——
+import { isPdfPath } from "@/lib/utils"
 
-export const DRAWING_KINDS = ["Plan", "Section", "Elevation", "Detail"] as const
+// —— Technical drawings: project-first model (Plans / Sections / Elevations / Details) ——
+
+export const DRAWING_KINDS = ["Plans", "Sections", "Elevations", "Details"] as const
 export type DrawingKind = (typeof DRAWING_KINDS)[number]
 
 export type DrawingSheet = {
@@ -18,14 +20,24 @@ export type DrawingProject = {
   title: string
   year: string
   category: ProjectCategory
+  /**
+   * Optional cover for drawings index / modal: basename only, file at
+   * `public/covers/drawings/<coverFile>` (e.g. `CAFE COVER.jpg`, `COVER PAGE AMBULANCE.jpg`).
+   */
+  coverFile?: string
+  /**
+   * Cover width ÷ height (e.g. from image metadata). Improves first paint before load;
+   * raster covers still refine from intrinsic size when this is omitted.
+   */
+  coverAspectRatio?: number
   drawings: Partial<Record<DrawingKind, DrawingSheet>>
 }
 
 export const KIND_TO_SLUG: Record<DrawingKind, string> = {
-  Plan: "plan",
-  Section: "section",
-  Elevation: "elevation",
-  Detail: "detail",
+  Plans: "plan",
+  Sections: "section",
+  Elevations: "elevation",
+  Details: "detail",
 }
 
 export function kindToSlug(kind: DrawingKind): string {
@@ -52,108 +64,53 @@ function sheet(
 export const commercialProjects: DrawingProject[] = [
   {
     id: 1,
-    title: "Downtown Office Tower",
-    year: "2024",
+    title: "AMBULANCE STATION",
+    year: "2026",
     category: "commercial",
+    coverFile: "COVER PAGE AMBULANCE.jpg",
+    coverAspectRatio: 1499 / 656,
     drawings: {
-      Plan: sheet("1:200", "Revit", "A-100", [
-        "/placeholder.svg",
-        "/placeholder.svg",
-        "/placeholder.svg",
+      Plans: sheet("1:100", "Revit", "A2.1/A2.4", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20MAIN%20FLOOR%20PLAN.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20MAIN%20FLOOR%20RCP%20-%20A2.4.pdf",
       ]),
-      Section: sheet("1:100", "Rhino", "A-101"),
-      Elevation: sheet("1:150", "AutoCAD", "A-102"),
-      Detail: sheet("1:20", "Rhino", "A-103"),
+      Sections: sheet("1:100", "Rhino", "A-101", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20PLAN%20%26%20SECTION%20DETAILS.pdf",
+      ]),
+      Elevations: sheet("1:150", "AutoCAD", "A-102", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20ELEVATION.pdf",
+      ]),
+      Details: sheet("1:20", "Rhino", "A-103", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20LEGEND%20%26%20SCHEDULES.pdf",
+      ]),
     },
   },
   {
     id: 2,
-    title: "Mixed-Use Plaza",
-    year: "2023",
+    title: "CAFE",
+    year: "2026",
     category: "commercial",
+    coverFile: "CAFE COVER.jpg",
+    coverAspectRatio: 1311 / 792,
     drawings: {
-      Plan: sheet("1:200", "Revit", "A-102"),
-      Section: sheet("1:100", "Revit", "A-103"),
-      Elevation: sheet("1:150", "Revit", "A-104"),
-      Detail: sheet("1:25", "Rhino", "A-105"),
-    },
-  },
-  {
-    id: 3,
-    title: "Tech Campus Hub",
-    year: "2024",
-    category: "commercial",
-    drawings: {
-      Plan: sheet("1:250", "AutoCAD", "A-103"),
-      Section: sheet("1:125", "AutoCAD", "A-104"),
-      Elevation: sheet("1:150", "AutoCAD", "A-105"),
-      Detail: sheet("1:15", "Rhino", "A-106"),
-    },
-  },
-  {
-    id: 4,
-    title: "Retail Pavilion",
-    year: "2023",
-    category: "commercial",
-    drawings: {
-      Plan: sheet("1:150", "Rhino", "A-104"),
-      Section: sheet("1:75", "Rhino", "A-105"),
-      Elevation: sheet("1:100", "Revit", "A-106"),
-      Detail: sheet("1:20", "Rhino", "A-107"),
+      Plans: sheet("1:200", "Revit", "A-102", [
+        "/drawings/cafe/CAFE%20FLOOR%20PLAN.pdf",
+        "/drawings/cafe/CAFE%20SECOND%20FLOOR%20PLAN.pdf",
+        "/drawings/cafe/CAFE%20THIRD%20FLOOR%20PLAN.pdf",
+      ]),
+      Sections: sheet("1:100", "Revit", "A-103"),
+      Elevations: sheet("1:150", "Revit", "A-104", [
+        "/drawings/cafe/CAFE%20EAST%20ELEVATION.pdf",
+        "/drawings/cafe/CAFE%20NORTH%20ELEVATION.pdf",
+        "/drawings/cafe/CAFE%20SOUTH%20ELEVATION.pdf",
+      ]),
+      Details: sheet("1:25", "Rhino", "A-105"),
     },
   },
 ]
 
-export const residentialProjects: DrawingProject[] = [
-  {
-    id: 5,
-    title: "Canyon House",
-    year: "2024",
-    category: "residential",
-    drawings: {
-      Plan: sheet("1:100", "Revit", "A-201"),
-      Section: sheet("1:50", "Revit", "A-202"),
-      Elevation: sheet("1:75", "Rhino", "A-203"),
-      Detail: sheet("1:10", "Revit", "A-204"),
-    },
-  },
-  {
-    id: 6,
-    title: "Urban Loft",
-    year: "2023",
-    category: "residential",
-    drawings: {
-      Plan: sheet("1:100", "AutoCAD", "A-202"),
-      Section: sheet("1:50", "AutoCAD", "A-203"),
-      Elevation: sheet("1:75", "AutoCAD", "A-204"),
-      Detail: sheet("1:12", "Revit", "A-205"),
-    },
-  },
-  {
-    id: 7,
-    title: "Weekend Retreat",
-    year: "2024",
-    category: "residential",
-    drawings: {
-      Plan: sheet("1:80", "Rhino", "A-203"),
-      Section: sheet("1:40", "Rhino", "A-204"),
-      Elevation: sheet("1:75", "Rhino", "A-205"),
-      Detail: sheet("1:8", "Revit", "A-206"),
-    },
-  },
-  {
-    id: 8,
-    title: "Courtyard Apartments",
-    year: "2023",
-    category: "residential",
-    drawings: {
-      Plan: sheet("1:125", "Revit", "A-204"),
-      Section: sheet("1:60", "Revit", "A-205"),
-      Elevation: sheet("1:100", "Revit", "A-206"),
-      Detail: sheet("1:10", "Revit", "A-207"),
-    },
-  },
-]
+/** Same `DrawingProject` shape as commercial; append entries when you add residential work. */
+export const residentialProjects: DrawingProject[] = []
 
 export const allDrawingProjects: DrawingProject[] = [
   ...commercialProjects,
@@ -164,10 +121,22 @@ export function getDrawingProjectById(id: number): DrawingProject | undefined {
   return allDrawingProjects.find((p) => p.id === id)
 }
 
+function coverFilePublicUrl(coverFile: string): string {
+  const base = coverFile.replace(/\\/g, "/").split("/").pop()?.trim() ?? ""
+  if (!base) return "/placeholder.svg"
+  return `/covers/drawings/${encodeURIComponent(base)}`
+}
+
 export function coverImageForProject(project: DrawingProject): string {
+  if (project.coverFile != null && project.coverFile.trim() !== "") {
+    return coverFilePublicUrl(project.coverFile)
+  }
   for (const kind of DRAWING_KINDS) {
     const s = project.drawings[kind]
-    if (s?.images[0]) return s.images[0]
+    if (!s?.images?.length) continue
+    for (const url of s.images) {
+      if (!isPdfPath(url)) return url
+    }
   }
   return "/placeholder.svg"
 }

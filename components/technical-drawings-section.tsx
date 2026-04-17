@@ -1,16 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import Image from "next/image"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   commercialProjects,
   residentialProjects,
-  coverImageForProject,
+  getDrawingProjectById,
   type DrawingProject,
 } from "@/lib/data"
 import { DrawingModal } from "./drawing-modal"
-import { FxCardShine } from "./fx-card-shine"
+import { DrawingProjectCard } from "./drawing-project-card"
 
 function DrawingGrid({
   title,
@@ -26,30 +26,20 @@ function DrawingGrid({
       <h4 className="font-mono text-xs uppercase tracking-[0.1em] text-[#AAAAAA]">
         {title}
       </h4>
-      <div className="grid grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         {projects.map((project, index) => (
           <motion.div
             key={project.id}
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: index * 0.1, duration: 0.5 }}
-            className="group relative aspect-square overflow-hidden border border-[#333333] bg-black transition-colors duration-300 hover:border-white"
-            onClick={() => onSelect(project)}
-            data-clickable="true"
+            transition={{ delay: index * 0.08, duration: 0.45 }}
           >
-            <Image
-              src={coverImageForProject(project)}
-              alt={project.title}
-              fill
-              className="object-cover opacity-70 transition-all duration-300 group-hover:scale-[1.02] group-hover:opacity-100"
+            <DrawingProjectCard
+              project={project}
+              onSelect={onSelect}
+              sizes="(max-width: 1024px) 50vw, 25vw"
             />
-            <FxCardShine />
-            <div className="absolute inset-0 z-[15] flex items-end bg-black/60 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-              <p className="font-mono text-xs uppercase tracking-wide text-white">
-                {project.title} — {project.year}
-              </p>
-            </div>
           </motion.div>
         ))}
       </div>
@@ -57,10 +47,23 @@ function DrawingGrid({
   )
 }
 
-export function TechnicalDrawingsSection() {
+function TechnicalDrawingsSectionInner() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [selectedProject, setSelectedProject] = useState<DrawingProject | null>(
     null
   )
+
+  useEffect(() => {
+    const raw = searchParams.get("project")
+    if (raw == null || raw === "") return
+    const id = Number(raw)
+    if (!Number.isFinite(id)) return
+    const p = getDrawingProjectById(id)
+    if (!p) return
+    setSelectedProject(p)
+    router.replace("/", { scroll: false })
+  }, [searchParams, router])
 
   return (
     <section className="px-6 py-20">
@@ -92,35 +95,55 @@ export function TechnicalDrawingsSection() {
           </h3>
         </motion.div>
 
-        <div className="relative grid grid-cols-1 gap-12 lg:grid-cols-2">
+        <div
+          className={
+            residentialProjects.length > 0
+              ? "relative grid grid-cols-1 gap-12 lg:grid-cols-2"
+              : "mx-auto max-w-3xl"
+          }
+        >
           <DrawingGrid
             title="Commercial"
             projects={commercialProjects}
             onSelect={setSelectedProject}
           />
 
-          <motion.div
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-0 left-1/2 top-0 hidden w-px origin-top bg-white/25 lg:block"
-          />
+          {residentialProjects.length > 0 ? (
+            <>
+              <motion.div
+                initial={{ scaleY: 0 }}
+                whileInView={{ scaleY: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute bottom-0 left-1/2 top-0 hidden w-px origin-top bg-white/25 lg:block"
+              />
 
-          <DrawingGrid
-            title="Residential"
-            projects={residentialProjects}
-            onSelect={setSelectedProject}
-          />
+              <DrawingGrid
+                title="Residential"
+                projects={residentialProjects}
+                onSelect={setSelectedProject}
+              />
+            </>
+          ) : null}
         </div>
       </div>
 
       {selectedProject && (
         <DrawingModal
           project={selectedProject}
+          linkKindReturnToIndexModal
+          kindReturnOrigin="home"
           onClose={() => setSelectedProject(null)}
         />
       )}
     </section>
+  )
+}
+
+export function TechnicalDrawingsSection() {
+  return (
+    <Suspense fallback={null}>
+      <TechnicalDrawingsSectionInner />
+    </Suspense>
   )
 }
