@@ -38,16 +38,6 @@ export function Footer() {
                   LinkedIn
                   <span className="absolute left-0 -bottom-px w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
                 </Link>
-                {" / "}
-                <Link
-                  href="https://archinect.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors relative group"
-                >
-                  Archinect
-                  <span className="absolute left-0 -bottom-px w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
-                </Link>
               </p>
             </div>
             <button className="mt-4 px-6 py-3 border border-white text-white font-mono text-sm uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-all duration-300">
