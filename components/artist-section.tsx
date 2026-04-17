@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import Image from "next/image"
 import { artistWorks } from "@/lib/data"
 import { Lightbox } from "./lightbox"
+import { FxCardShine } from "./fx-card-shine"
 
 export function ArtistSection() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
@@ -54,13 +55,16 @@ export function ArtistSection() {
               onClick={() => openLightbox(index)}
               data-clickable="true"
             >
-              <div className={`relative ${index % 3 === 0 ? "aspect-[3/4]" : index % 3 === 1 ? "aspect-square" : "aspect-[4/3]"}`}>
+              <div
+                className={`relative overflow-hidden ${index % 3 === 0 ? "aspect-[3/4]" : index % 3 === 1 ? "aspect-square" : "aspect-[4/3]"}`}
+              >
                 <Image
                   src={work.image}
                   alt={work.title}
                   fill
-                  className="object-cover group-hover:grayscale-[30%] transition-all duration-300"
+                  className="object-cover transition-all duration-300 group-hover:grayscale-[30%]"
                 />
+                <FxCardShine />
               </div>
             </motion.div>
           ))}

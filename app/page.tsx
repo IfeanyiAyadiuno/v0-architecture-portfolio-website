@@ -2,6 +2,7 @@
 
 import { Navigation } from "@/components/navigation"
 import { CustomCursor } from "@/components/custom-cursor"
+import { PageVisualFx } from "@/components/page-visual-fx"
 import { HeroSection } from "@/components/hero-section"
 import { TechnicalDrawingsSection } from "@/components/technical-drawings-section"
 import { RenderingsSection } from "@/components/renderings-section"
@@ -15,12 +16,15 @@ export default function HomePage() {
       <CustomCursor />
       <Navigation />
       <PageTransition>
-        <main className="min-h-screen bg-black">
-          <HeroSection />
-          <TechnicalDrawingsSection />
-          <RenderingsSection />
-          <ArtistSection />
-          <Footer />
+        <main className="relative min-h-screen bg-black">
+          <PageVisualFx />
+          <div className="relative z-10">
+            <HeroSection />
+            <TechnicalDrawingsSection />
+            <RenderingsSection />
+            <ArtistSection />
+            <Footer />
+          </div>
         </main>
       </PageTransition>
     </>

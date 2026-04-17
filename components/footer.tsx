@@ -16,21 +16,21 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
           <div className="space-y-4">
             <h3 className="font-[family-name:var(--font-space-grotesk)] text-lg font-bold uppercase tracking-[0.05em] text-white">
-              [Your Name]
+              [CHIDERA UZO]
             </h3>
             <div className="space-y-2 font-mono text-sm text-[#AAAAAA]">
               <p>
                 <Link
-                  href="mailto:hello@example.com"
+                  href="mailto:chiderauzoh2003@gmail.com"
                   className="hover:text-white transition-colors relative group"
                 >
-                  hello@example.com
+                  chiderauzoh2003@gmail.com
                   <span className="absolute left-0 -bottom-px w-0 h-px bg-white group-hover:w-full transition-all duration-300" />
                 </Link>
               </p>
               <p>
                 <Link
-                  href="https://linkedin.com"
+                  href="https://www.linkedin.com/in/chidera-uzo-6128532aa/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors relative group"

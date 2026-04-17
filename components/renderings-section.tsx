@@ -1,31 +1,99 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import useEmblaCarousel from "embla-carousel-react"
+import Autoplay from "embla-carousel-autoplay"
+import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import { renderings } from "@/lib/data"
 import { ArrowRight } from "lucide-react"
+import { FxCardShine } from "./fx-card-shine"
+import { RenderingLightbox } from "./rendering-lightbox"
+
+const SLIDE_GAP_PX = 20
 
 export function RenderingsSection() {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [activeIndex, setActiveIndex] = useState(1)
-  const x = useMotionValue(0)
-  const springX = useSpring(x, { stiffness: 300, damping: 30 })
+  const reducedMotion = useReducedMotion()
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-  const cardWidth = 400
-  const gap = 20
-  const totalWidth = (cardWidth + gap) * renderings.length
+  const plugins = useMemo(
+    () =>
+      reducedMotion === true
+        ? []
+        : [
+            Autoplay({
+              delay: 4500,
+              // With stopOnInteraction true, pointerUp is never wired — first drag kills autoplay forever.
+              stopOnInteraction: false,
+              // With stopOnMouseEnter true + stopOnInteraction true, mouseleave is never wired — first hover kills autoplay forever.
+              stopOnMouseEnter: false,
+              stopOnFocusIn: true,
+              stopOnLastSnap: false,
+              playOnInit: true,
+            }),
+          ],
+    [reducedMotion]
+  )
 
-  const handleDrag = (_: never, info: { offset: { x: number } }) => {
-    const newIndex = Math.round(-info.offset.x / (cardWidth + gap))
-    const clampedIndex = Math.max(0, Math.min(renderings.length - 1, newIndex))
-    setActiveIndex(clampedIndex)
-  }
+  const [emblaRef, emblaApi] = useEmblaCarousel(
+    {
+      align: "start",
+      axis: "x",
+      loop: true,
+      dragFree: false,
+    },
+    plugins
+  )
+
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return
+    setActiveIndex(emblaApi.selectedScrollSnap())
+  }, [emblaApi])
+
+  useEffect(() => {
+    if (!emblaApi) return
+    emblaApi.on("select", onSelect)
+    emblaApi.on("reInit", onSelect)
+    onSelect()
+    return () => {
+      emblaApi.off("select", onSelect)
+      emblaApi.off("reInit", onSelect)
+    }
+  }, [emblaApi, onSelect])
+
+  useEffect(() => {
+    if (!emblaApi) return
+    const id = requestAnimationFrame(() => {
+      emblaApi.reInit()
+    })
+    return () => cancelAnimationFrame(id)
+  }, [emblaApi])
+
+  const scrollTo = useCallback(
+    (index: number) => {
+      emblaApi?.scrollTo(index)
+    },
+    [emblaApi]
+  )
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), [])
+  const goNextLightbox = useCallback(() => {
+    setLightboxIndex((i) =>
+      i === null ? null : (i + 1) % renderings.length
+    )
+  }, [])
+  const goPrevLightbox = useCallback(() => {
+    setLightboxIndex((i) =>
+      i === null ? null : (i - 1 + renderings.length) % renderings.length
+    )
+  }, [])
 
   return (
-    <section className="py-20 px-6 overflow-hidden">
-      <div className="max-w-7xl mx-auto">
+    <section className="overflow-hidden px-6 py-20">
+      <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -38,67 +106,90 @@ export function RenderingsSection() {
           </h3>
         </motion.div>
 
-        <div ref={containerRef} className="relative">
-          <motion.div
-            drag="x"
-            dragConstraints={{ left: -totalWidth + cardWidth * 3, right: 0 }}
-            onDrag={handleDrag}
-            style={{ x: springX }}
-            className="flex gap-5"
-          >
-            {renderings.map((rendering, index) => {
-              const isActive = index === activeIndex
-              const distance = Math.abs(index - activeIndex)
-              const scale = isActive ? 1.05 : distance === 1 ? 0.95 : 0.9
+        <div className="relative">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div
+              className="flex touch-pan-x"
+              style={{ marginLeft: -SLIDE_GAP_PX }}
+            >
+              {renderings.map((rendering, index) => {
+                const isActive = index === activeIndex
+                const distance = Math.abs(index - activeIndex)
+                const scale = isActive ? 1.05 : distance === 1 ? 0.95 : 0.9
 
-              return (
-                <motion.div
-                  key={rendering.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  animate={{ scale }}
-                  className="flex-shrink-0 w-[400px] group relative"
-                  data-clickable="true"
-                >
-                  <div className="aspect-video relative overflow-hidden bg-black border border-[#333333] hover:border-white transition-colors duration-300">
-                    <Image
-                      src={rendering.image}
-                      alt={rendering.title}
-                      fill
-                      className="object-cover"
-                    />
+                return (
+                  <div
+                    key={rendering.id}
+                    className="min-w-0 shrink-0 grow-0"
+                    style={{
+                      flex: `0 0 min(420px, calc(100vw - 48px))`,
+                      paddingLeft: SLIDE_GAP_PX,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setLightboxIndex(index)}
+                      className="group relative block w-full max-w-[400px] border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                      data-clickable="true"
+                      aria-label={`Open ${rendering.title}`}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{
+                          once: true,
+                          margin: "0px 0px -10% 0px",
+                        }}
+                        transition={{
+                          delay: index * 0.08,
+                          duration: 0.45,
+                        }}
+                        animate={{ scale }}
+                        className="relative w-full origin-center"
+                      >
+                        <div className="relative aspect-video overflow-hidden border border-[#333333] bg-black transition-colors duration-300 group-hover:border-white group-focus-visible:border-white">
+                          <Image
+                            src={rendering.image}
+                            alt={rendering.title}
+                            fill
+                            className="object-cover"
+                            draggable={false}
+                          />
+                          <FxCardShine />
 
-                    <div className="absolute top-4 left-4">
-                      <span className="font-mono text-[10px] uppercase tracking-wider text-white px-2 py-1 border border-white/50 bg-transparent">
-                        {rendering.type}
-                      </span>
-                    </div>
+                          <div className="absolute left-4 top-4 z-[15]">
+                            <span className="border border-white/50 bg-transparent px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-white">
+                              {rendering.type}
+                            </span>
+                          </div>
 
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                      <p className="font-mono text-xs text-white uppercase tracking-wide">
-                        {rendering.title} — {rendering.software} — {rendering.year}
-                      </p>
-                    </div>
+                          <div className="absolute inset-0 z-[15] flex items-end bg-black/60 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                            <p className="font-mono text-xs uppercase tracking-wide text-white">
+                              {rendering.title} — {rendering.software} —{" "}
+                              {rendering.year}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </button>
                   </div>
-                </motion.div>
-              )
-            })}
-          </motion.div>
+                )
+              })}
+            </div>
+          </div>
 
-          <div className="flex justify-center gap-2 mt-8">
+          <div className="mt-8 flex justify-center gap-2">
             {renderings.map((_, index) => (
               <button
                 key={index}
-                onClick={() => {
-                  setActiveIndex(index)
-                  x.set(-(cardWidth + gap) * index)
-                }}
-                className={`w-2 h-2 rounded-full transition-colors duration-300 ${
+                type="button"
+                onClick={() => scrollTo(index)}
+                className={`h-2 w-2 rounded-full transition-colors duration-300 ${
                   index === activeIndex ? "bg-white" : "bg-[#333333]"
                 }`}
                 data-clickable="true"
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
@@ -112,15 +203,25 @@ export function RenderingsSection() {
           >
             <Link
               href="/drawings-index"
-              className="inline-flex items-center gap-2 font-mono text-sm text-white hover:text-[#AAAAAA] transition-colors group"
+              className="group inline-flex items-center gap-2 font-mono text-sm text-white transition-colors hover:text-[#AAAAAA]"
               data-clickable="true"
             >
               View all renderings
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </motion.div>
         </div>
       </div>
+
+      {lightboxIndex !== null && (
+        <RenderingLightbox
+          works={renderings}
+          currentIndex={lightboxIndex}
+          onClose={closeLightbox}
+          onNext={goNextLightbox}
+          onPrev={goPrevLightbox}
+        />
+      )}
     </section>
   )
 }

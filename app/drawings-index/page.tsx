@@ -8,7 +8,15 @@ import { CustomCursor } from "@/components/custom-cursor"
 import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 import { DrawingModal } from "@/components/drawing-modal"
-import { allDrawings, commercialProjects, residentialProjects, type Project } from "@/lib/data"
+import {
+  allDrawingProjects,
+  commercialProjects,
+  residentialProjects,
+  coverImageForProject,
+  DRAWING_KINDS,
+  type DrawingKind,
+  type DrawingProject,
+} from "@/lib/data"
 import { ChevronDown } from "lucide-react"
 
 const filterOptions = [
@@ -19,38 +27,39 @@ const filterOptions = [
   "Section",
   "Elevation",
   "Detail",
-]
+] as const
 
 const sortOptions = [
-  { label: "Project", value: "title" },
-  { label: "Year", value: "year" },
-  { label: "Drawing Type", value: "drawingType" },
+  { label: "Project", value: "title" as const },
+  { label: "Year", value: "year" as const },
 ]
 
+function isDrawingKind(value: string): value is DrawingKind {
+  return (DRAWING_KINDS as readonly string[]).includes(value)
+}
+
 export default function DrawingsIndexPage() {
-  const [activeFilter, setActiveFilter] = useState("All")
-  const [sortBy, setSortBy] = useState("title")
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string>("All")
+  const [sortBy, setSortBy] = useState<"title" | "year">("title")
+  const [selectedProject, setSelectedProject] = useState<DrawingProject | null>(
+    null
+  )
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false)
 
-  const filteredAndSortedDrawings = useMemo(() => {
-    let filtered = [...allDrawings]
+  const filteredAndSortedProjects = useMemo(() => {
+    let filtered: DrawingProject[] = [...allDrawingProjects]
 
     if (activeFilter === "Commercial") {
       filtered = commercialProjects
     } else if (activeFilter === "Residential") {
       filtered = residentialProjects
-    } else if (activeFilter !== "All") {
-      filtered = allDrawings.filter(
-        (d) => d.drawingType.toLowerCase() === activeFilter.toLowerCase()
-      )
+    } else if (activeFilter !== "All" && isDrawingKind(activeFilter)) {
+      filtered = allDrawingProjects.filter((p) => p.drawings[activeFilter])
     }
 
-    return filtered.sort((a, b) => {
+    return [...filtered].sort((a, b) => {
       if (sortBy === "year") {
         return b.year.localeCompare(a.year)
-      } else if (sortBy === "drawingType") {
-        return a.drawingType.localeCompare(b.drawingType)
       }
       return a.title.localeCompare(b.title)
     })
@@ -62,18 +71,18 @@ export default function DrawingsIndexPage() {
       <Navigation />
       <PageTransition>
         <main className="min-h-screen bg-black pt-24">
-          <div className="max-w-7xl mx-auto px-6">
+          <div className="mx-auto max-w-7xl px-6">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="mb-12"
             >
-              <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl md:text-4xl font-bold uppercase tracking-[0.05em] text-white mb-8">
+              <h1 className="mb-8 font-[family-name:var(--font-space-grotesk)] text-3xl font-bold uppercase tracking-[0.05em] text-white md:text-4xl">
                 Drawings Index
               </h1>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                 <LayoutGroup>
                   <div className="flex flex-wrap gap-2">
                     {filterOptions.map((filter) => (
@@ -108,11 +117,11 @@ export default function DrawingsIndexPage() {
                 <div className="relative">
                   <button
                     onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                    className="flex items-center gap-2 px-4 py-2 font-mono text-xs uppercase tracking-wide text-[#AAAAAA] hover:text-white border border-[#333333] hover:border-white transition-colors"
+                    className="flex items-center gap-2 border border-[#333333] px-4 py-2 font-mono text-xs uppercase tracking-wide text-[#AAAAAA] transition-colors hover:border-white hover:text-white"
                     data-clickable="true"
                   >
                     Sort: {sortOptions.find((s) => s.value === sortBy)?.label}
-                    <ChevronDown className="w-4 h-4" />
+                    <ChevronDown className="h-4 w-4" />
                   </button>
 
                   <AnimatePresence>
@@ -122,7 +131,7 @@ export default function DrawingsIndexPage() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute right-0 top-full mt-2 bg-black border border-[#333333] z-10"
+                        className="absolute right-0 top-full z-10 mt-2 border border-[#333333] bg-black"
                       >
                         {sortOptions.map((option) => (
                           <button
@@ -131,7 +140,7 @@ export default function DrawingsIndexPage() {
                               setSortBy(option.value)
                               setSortDropdownOpen(false)
                             }}
-                            className={`block w-full px-4 py-2 font-mono text-xs uppercase tracking-wide text-left hover:bg-white hover:text-black transition-colors ${
+                            className={`block w-full px-4 py-2 text-left font-mono text-xs uppercase tracking-wide transition-colors hover:bg-white hover:text-black ${
                               sortBy === option.value
                                 ? "text-white"
                                 : "text-[#AAAAAA]"
@@ -151,10 +160,10 @@ export default function DrawingsIndexPage() {
             <LayoutGroup>
               <motion.div
                 layout
-                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5"
+                className="grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4"
               >
                 <AnimatePresence mode="popLayout">
-                  {filteredAndSortedDrawings.map((project) => (
+                  {filteredAndSortedProjects.map((project) => (
                     <motion.div
                       key={project.id}
                       layout
@@ -170,20 +179,20 @@ export default function DrawingsIndexPage() {
                       onClick={() => setSelectedProject(project)}
                       data-clickable="true"
                     >
-                      <div className="aspect-square relative bg-black border border-[#333333] hover:border-white transition-colors duration-300 overflow-hidden">
+                      <div className="relative aspect-square overflow-hidden border border-[#333333] bg-black transition-colors duration-300 group-hover:border-white">
                         <Image
-                          src={project.image}
+                          src={coverImageForProject(project)}
                           alt={project.title}
                           fill
-                          className="object-cover opacity-70 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-300"
+                          className="object-cover opacity-70 transition-all duration-300 group-hover:scale-[1.02] group-hover:opacity-100"
                         />
                       </div>
                       <div className="mt-3 space-y-1">
-                        <p className="font-mono text-xs text-white truncate">
+                        <p className="truncate font-mono text-xs text-white">
                           {project.title}
                         </p>
-                        <p className="font-mono text-[10px] text-[#AAAAAA] uppercase">
-                          {project.drawingType} — {project.scale}
+                        <p className="font-mono text-[10px] uppercase text-[#AAAAAA]">
+                          {project.year} — {project.category}
                         </p>
                       </div>
                     </motion.div>
@@ -192,11 +201,11 @@ export default function DrawingsIndexPage() {
               </motion.div>
             </LayoutGroup>
 
-            {filteredAndSortedDrawings.length === 0 && (
+            {filteredAndSortedProjects.length === 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="text-center py-20"
+                className="py-20 text-center"
               >
                 <p className="font-mono text-sm text-[#AAAAAA]">
                   No drawings found for this filter.
