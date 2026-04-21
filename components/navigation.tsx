@@ -23,8 +23,8 @@ export function Navigation() {
       transition={{ duration: 0.6, ease: "easeOut" }}
       className="fixed top-0 left-0 right-0 z-[400] px-6 py-4 transition-all duration-300"
       style={{
-        backgroundColor: scrolled ? "rgba(0, 0, 0, 0.9)" : "transparent",
-        backdropFilter: scrolled ? "blur(10px)" : "none",
+        backgroundColor: scrolled ? "rgba(0, 0, 0, 0.92)" : "transparent",
+        backdropFilter: scrolled ? "blur(4px)" : "none",
       }}
     >
       <nav className="flex items-center justify-between max-w-7xl mx-auto">

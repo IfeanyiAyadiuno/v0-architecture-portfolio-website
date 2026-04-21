@@ -46,12 +46,12 @@ export function HeroSection() {
         aria-hidden
       >
         <motion.div
-          className="h-[min(88vw,640px)] w-[min(88vw,640px)] rounded-full bg-white/[0.045] blur-[110px]"
+          className="h-[min(88vw,640px)] w-[min(88vw,640px)] rounded-full bg-white/[0.04] blur-[64px] md:blur-[80px]"
           animate={{
-            scale: [1, 1.12, 1],
-            opacity: [0.35, 0.65, 0.35],
+            scale: [1, 1.05, 1],
+            opacity: [0.32, 0.52, 0.32],
           }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
         />
       </motion.div>
 

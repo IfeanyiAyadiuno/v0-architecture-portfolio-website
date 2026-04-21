@@ -8,7 +8,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { renderings } from "@/lib/data"
 import { ArrowRight } from "lucide-react"
-import { FxCardShine } from "./fx-card-shine"
 import { RenderingLightbox } from "./rendering-lightbox"
 
 const SLIDE_GAP_PX = 20
@@ -113,10 +112,6 @@ export function RenderingsSection() {
               style={{ marginLeft: -SLIDE_GAP_PX }}
             >
               {renderings.map((rendering, index) => {
-                const isActive = index === activeIndex
-                const distance = Math.abs(index - activeIndex)
-                const scale = isActive ? 1.05 : distance === 1 ? 0.95 : 0.9
-
                 return (
                   <div
                     key={rendering.id}
@@ -134,20 +129,7 @@ export function RenderingsSection() {
                       data-clickable="true"
                       aria-label={`Open ${rendering.title}`}
                     >
-                      <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{
-                          once: true,
-                          margin: "0px 0px -10% 0px",
-                        }}
-                        transition={{
-                          delay: index * 0.08,
-                          duration: 0.45,
-                        }}
-                        animate={{ scale }}
-                        className="relative w-full origin-center"
-                      >
+                      <div className="relative w-full">
                         <div className="relative aspect-video overflow-hidden border border-[#333333] bg-black transition-colors duration-300 group-hover:border-white group-focus-visible:border-white">
                           <Image
                             src={rendering.image}
@@ -155,8 +137,11 @@ export function RenderingsSection() {
                             fill
                             className="object-cover"
                             draggable={false}
+                            sizes="(max-width: 768px) 90vw, 400px"
+                            loading={index < 2 ? "eager" : "lazy"}
+                            priority={index === 0}
+                            decoding="async"
                           />
-                          <FxCardShine />
 
                           <div className="absolute left-4 top-4 z-[15]">
                             <span className="border border-white/50 bg-transparent px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-white">
@@ -171,7 +156,7 @@ export function RenderingsSection() {
                             </p>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     </button>
                   </div>
                 )

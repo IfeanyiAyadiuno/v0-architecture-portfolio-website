@@ -1,20 +1,18 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { motion } from "framer-motion"
 
-const MAX_TRAIL = 36
-const MIN_DIST_SQ = 4
-const IDLE_MS = 100
-const DECAY_MS = 40
-
+/**
+ * Lightweight cursor: no trail (trail caused heavy React re-renders + paint).
+ * Position updates via rAF + direct DOM writes to avoid layout thrash.
+ */
 export function CustomCursor() {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [trail, setTrail] = useState<{ x: number; y: number }[]>([])
-  const [isHovering, setIsHovering] = useState(false)
-  const [isVisible, setIsVisible] = useState(false)
   const [finePointer, setFinePointer] = useState(false)
-  const lastMoveRef = useRef(0)
+  const dotRef = useRef<HTMLDivElement>(null)
+  const posRef = useRef({ x: 0, y: 0 })
+  const hoverRef = useRef(false)
+  const visibleRef = useRef(false)
+  const rafRef = useRef<number | null>(null)
 
   useEffect(() => {
     const mq = window.matchMedia("(pointer: fine)")
@@ -26,55 +24,68 @@ export function CustomCursor() {
 
   useEffect(() => {
     if (!finePointer) return
-    const handleMouseMove = (e: MouseEvent) => {
-      lastMoveRef.current = Date.now()
-      setPosition({ x: e.clientX, y: e.clientY })
-      setIsVisible(true)
-      setTrail((prev) => {
-        const last = prev[prev.length - 1]
-        if (last) {
-          const dx = e.clientX - last.x
-          const dy = e.clientY - last.y
-          if (dx * dx + dy * dy < MIN_DIST_SQ) return prev
-        }
-        return [...prev, { x: e.clientX, y: e.clientY }].slice(-MAX_TRAIL)
-      })
+
+    const paint = () => {
+      rafRef.current = null
+      const el = dotRef.current
+      if (!el) return
+      const { x, y } = posRef.current
+      const h = hoverRef.current
+      const size = h ? 24 : 8
+      const off = h ? 12 : 4
+      el.style.opacity = visibleRef.current ? "1" : "0"
+      el.style.width = `${size}px`
+      el.style.height = `${size}px`
+      el.style.transform = `translate3d(${x - off}px, ${y - off}px, 0)`
     }
 
-    const handleMouseEnter = () => setIsVisible(true)
-    const handleMouseLeave = () => setIsVisible(false)
-
-    const handleHoverStart = (e: MouseEvent) => {
-      const target = e.target as HTMLElement
-      if (
-        target.tagName === "A" ||
-        target.tagName === "BUTTON" ||
-        target.closest("a") ||
-        target.closest("button") ||
-        target.dataset.clickable === "true" ||
-        target.closest("[data-clickable='true']")
-      ) {
-        setIsHovering(true)
+    const schedule = () => {
+      if (rafRef.current == null) {
+        rafRef.current = requestAnimationFrame(paint)
       }
     }
 
-    const handleHoverEnd = () => {
-      setIsHovering(false)
+    const handleMouseMove = (e: MouseEvent) => {
+      posRef.current = { x: e.clientX, y: e.clientY }
+      visibleRef.current = true
+      schedule()
     }
 
-    window.addEventListener("mousemove", handleMouseMove)
+    const handleMouseEnter = () => {
+      visibleRef.current = true
+      schedule()
+    }
+    const handleMouseLeave = () => {
+      visibleRef.current = false
+      schedule()
+    }
+
+    const handleHoverStart = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      const interactive =
+        target.tagName === "A" ||
+        target.tagName === "BUTTON" ||
+        !!target.closest("a") ||
+        !!target.closest("button") ||
+        target.dataset.clickable === "true" ||
+        !!target.closest("[data-clickable='true']")
+      hoverRef.current = interactive
+      schedule()
+    }
+
+    const handleHoverEnd = () => {
+      hoverRef.current = false
+      schedule()
+    }
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true })
     document.addEventListener("mouseenter", handleMouseEnter)
     document.addEventListener("mouseleave", handleMouseLeave)
     document.addEventListener("mouseover", handleHoverStart)
     document.addEventListener("mouseout", handleHoverEnd)
 
-    const decayId = window.setInterval(() => {
-      if (Date.now() - lastMoveRef.current < IDLE_MS) return
-      setTrail((t) => (t.length > 0 ? t.slice(1) : t))
-    }, DECAY_MS)
-
     return () => {
-      window.clearInterval(decayId)
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
       window.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseenter", handleMouseEnter)
       document.removeEventListener("mouseleave", handleMouseLeave)
@@ -86,51 +97,16 @@ export function CustomCursor() {
   if (!finePointer) return null
 
   return (
-    <>
-      <div
-        className="fixed inset-0 pointer-events-none z-[9998] overflow-hidden"
-        aria-hidden
-      >
-        {trail.map((p, i) => {
-          const denom = Math.max(trail.length - 1, 1)
-          const t = trail.length === 1 ? 1 : i / denom
-          const opacity = 0.05 + t * 0.5
-          const size = 4 + t * 20
-          const blur = (1 - t) * 6
-          return (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                left: p.x,
-                top: p.y,
-                width: size,
-                height: size,
-                opacity,
-                transform: "translate(-50%, -50%)",
-                filter: blur > 0.5 ? `blur(${blur}px)` : undefined,
-                boxShadow: `0 0 ${8 + t * 16}px rgba(255, 255, 255, ${0.15 + t * 0.35})`,
-              }}
-            />
-          )
-        })}
-      </div>
-      <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[9999] rounded-full bg-white mix-blend-difference"
-        animate={{
-          x: position.x - (isHovering ? 12 : 4),
-          y: position.y - (isHovering ? 12 : 4),
-          width: isHovering ? 24 : 8,
-          height: isHovering ? 24 : 8,
-          opacity: isVisible ? 1 : 0,
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 28,
-          mass: 0.5,
-        }}
-      />
-    </>
+    <div
+      ref={dotRef}
+      className="pointer-events-none fixed left-0 top-0 z-[9999] rounded-full bg-white mix-blend-difference will-change-[transform,width,height,opacity]"
+      style={{
+        width: 8,
+        height: 8,
+        opacity: 0,
+        transform: "translate3d(0,0,0)",
+      }}
+      aria-hidden
+    />
   )
 }
