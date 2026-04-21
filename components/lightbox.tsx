@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useLayoutEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
@@ -13,61 +15,85 @@ interface LightboxProps {
   onPrev: () => void
 }
 
+/** Portaled to `document.body` so `fixed` is viewport-anchored (PageTransition uses transforms). */
 export function Lightbox({ works, currentIndex, onClose, onNext, onPrev }: LightboxProps) {
   const currentWork = works[currentIndex]
-  if (!currentWork) return null
+  const [container, setContainer] = useState<HTMLElement | null>(null)
 
-  return (
+  useLayoutEffect(() => {
+    setContainer(document.body)
+  }, [])
+
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
+  if (!currentWork || !container) return null
+
+  return createPortal(
     <AnimatePresence>
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Artwork"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 bg-black z-[100] flex flex-col"
+        className="fixed inset-0 z-[350] flex flex-col bg-black"
         onClick={onClose}
       >
-        <div className="flex-1 flex items-center justify-center p-6 relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onClose()
-            }}
-            className="absolute top-6 right-6 z-10 p-2 text-white hover:text-[#AAAAAA] transition-colors"
-            data-clickable="true"
-          >
-            <X className="w-6 h-6" />
-          </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose()
+          }}
+          className="fixed top-[calc(env(safe-area-inset-top,0px)+5.25rem)] right-3 z-[360] inline-flex h-12 w-12 touch-manipulation items-center justify-center rounded-md text-white transition-colors hover:bg-white/10 hover:text-[#AAAAAA] active:bg-white/15 md:right-5 md:top-[calc(env(safe-area-inset-top,0px)+4.75rem)]"
+          data-clickable="true"
+          aria-label="Close"
+        >
+          <X className="pointer-events-none h-6 w-6 shrink-0" aria-hidden />
+        </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onPrev()
-            }}
-            className="absolute left-6 top-1/2 -translate-y-1/2 p-2 text-white hover:text-[#AAAAAA] transition-colors"
-            data-clickable="true"
-          >
-            <ChevronLeft className="w-8 h-8" />
-          </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onPrev()
+          }}
+          className="fixed top-1/2 left-2 z-[360] inline-flex h-14 w-14 -translate-y-1/2 touch-manipulation items-center justify-center rounded-md text-white transition-colors hover:bg-white/10 hover:text-[#AAAAAA] active:bg-white/15 md:left-4"
+          data-clickable="true"
+          aria-label="Previous"
+        >
+          <ChevronLeft className="pointer-events-none h-8 w-8 shrink-0" aria-hidden />
+        </button>
 
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onNext()
-            }}
-            className="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-white hover:text-[#AAAAAA] transition-colors"
-            data-clickable="true"
-          >
-            <ChevronRight className="w-8 h-8" />
-          </button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onNext()
+          }}
+          className="fixed top-1/2 right-2 z-[360] inline-flex h-14 w-14 -translate-y-1/2 touch-manipulation items-center justify-center rounded-md text-white transition-colors hover:bg-white/10 hover:text-[#AAAAAA] active:bg-white/15 md:right-4"
+          data-clickable="true"
+          aria-label="Next"
+        >
+          <ChevronRight className="pointer-events-none h-8 w-8 shrink-0" aria-hidden />
+        </button>
 
+        <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+6.5rem)] md:px-6 md:pt-24">
           <motion.div
             key={currentWork.id}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="relative max-w-4xl max-h-[70vh] w-full h-full"
+            className="relative h-[min(70dvh,720px)] w-full max-w-4xl"
             onClick={(e) => e.stopPropagation()}
           >
             <Image
@@ -75,6 +101,7 @@ export function Lightbox({ works, currentIndex, onClose, onNext, onPrev }: Light
               alt={currentWork.title}
               fill
               className="object-contain"
+              sizes="100vw"
             />
           </motion.div>
         </div>
@@ -83,16 +110,19 @@ export function Lightbox({ works, currentIndex, onClose, onNext, onPrev }: Light
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
-          className="p-6 text-center"
+          className="shrink-0 border-t border-[#333333] px-4 py-5 text-center md:px-6"
+          onClick={(e) => e.stopPropagation()}
         >
           <p className="font-mono text-sm text-white">
-            {currentWork.title} — {currentWork.medium} — {currentWork.dimensions} — {currentWork.year}
+            {currentWork.title} — {currentWork.medium} — {currentWork.dimensions} —{" "}
+            {currentWork.year}
           </p>
-          <p className="font-mono text-xs text-[#AAAAAA] mt-2">
+          <p className="mt-2 font-mono text-xs text-[#AAAAAA]">
             {currentIndex + 1} / {works.length}
           </p>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    container
   )
 }

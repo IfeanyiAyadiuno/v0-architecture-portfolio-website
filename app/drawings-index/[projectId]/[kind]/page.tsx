@@ -44,6 +44,14 @@ function exitFullscreenDoc() {
   return Promise.resolve()
 }
 
+/** True when native element fullscreen is unreliable; use CSS immersive mode instead. */
+function useImmersiveFullscreenFallback(): boolean {
+  if (typeof window === "undefined") return false
+  const ua = navigator.userAgent
+  if (/iPad|iPhone|iPod/i.test(ua)) return true
+  return window.matchMedia("(pointer: coarse)").matches
+}
+
 function DrawingFigureMedia({
   src,
   alt,
@@ -54,11 +62,15 @@ function DrawingFigureMedia({
   isPdf: boolean
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [isFs, setIsFs] = useState(false)
+  const [nativeFs, setNativeFs] = useState(false)
+  const [immersiveFs, setImmersiveFs] = useState(false)
+  const immersiveFallback = useMemo(() => useImmersiveFullscreenFallback(), [])
+
+  const isFs = nativeFs || immersiveFs
 
   useEffect(() => {
     const sync = () => {
-      setIsFs(getFullscreenElement() === containerRef.current)
+      setNativeFs(getFullscreenElement() === containerRef.current)
     }
     document.addEventListener("fullscreenchange", sync)
     document.addEventListener("webkitfullscreenchange", sync as EventListener)
@@ -68,15 +80,39 @@ function DrawingFigureMedia({
     }
   }, [])
 
+  useEffect(() => {
+    if (!immersiveFs) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [immersiveFs])
+
   const toggleFullscreen = useCallback(async () => {
     const el = containerRef.current
     if (!el) return
+
+    if (immersiveFs) {
+      setImmersiveFs(false)
+      return
+    }
     if (getFullscreenElement() === el) {
       await exitFullscreenDoc()
-    } else {
-      await requestFullscreenEl(el).catch(() => {})
+      return
     }
-  }, [])
+
+    if (immersiveFallback) {
+      setImmersiveFs(true)
+      return
+    }
+
+    try {
+      await requestFullscreenEl(el)
+    } catch {
+      setImmersiveFs(true)
+    }
+  }, [immersiveFs, immersiveFallback])
 
   const pdfSrc = useMemo(
     () =>
@@ -97,16 +133,44 @@ function DrawingFigureMedia({
         ref={containerRef}
         className={cn(
           "relative flex w-full flex-col bg-[#0a0a0a]",
-          isFs ? "min-h-screen justify-stretch" : ""
+          isFs && "min-h-0 justify-stretch",
+          immersiveFs &&
+            "fixed inset-0 z-[280] max-h-[100dvh] overscroll-none",
+          nativeFs && !immersiveFs && "min-h-screen"
         )}
       >
+        {/* Controls above the iframe on small screens so taps aren’t eaten by the PDF viewer */}
+        <div
+          className={cn(
+            "relative z-30 mb-2 flex shrink-0 justify-end md:absolute md:top-2 md:right-2 md:mb-0"
+          )}
+        >
+          <button
+            type="button"
+            onClick={() => void toggleFullscreen()}
+            className="touch-manipulation border border-[#333333] bg-black/95 px-4 py-3 font-mono text-[10px] uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:border-white hover:text-white active:bg-white/10 md:px-3 md:py-2"
+            data-clickable="true"
+          >
+            {isFs ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Minimize2 className="h-3.5 w-3.5" aria-hidden />
+                Exit
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <Maximize2 className="h-3.5 w-3.5" aria-hidden />
+                Fullscreen
+              </span>
+            )}
+          </button>
+        </div>
         {isPdf ? (
           isFs ? (
             <iframe
               key={pdfSrc}
               title={alt}
               src={pdfSrc}
-              className="min-h-0 w-full flex-1 border-0 bg-black"
+              className="min-h-0 w-full flex-1 basis-0 border-0 bg-black"
             />
           ) : (
             /* ~ANSI B / tabloid landscape (11×8.5) — matches many sheets so Chrome’s #view=Fit leaves little grey inside the iframe */
@@ -135,26 +199,6 @@ function DrawingFigureMedia({
             />
           </div>
         )}
-        <div className="absolute right-2 top-2 z-[1] flex gap-2">
-          <button
-            type="button"
-            onClick={() => void toggleFullscreen()}
-            className="border border-[#333333] bg-black/90 px-3 py-2 font-mono text-[10px] uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:border-white hover:text-white"
-            data-clickable="true"
-          >
-            {isFs ? (
-              <span className="inline-flex items-center gap-1.5">
-                <Minimize2 className="h-3.5 w-3.5" aria-hidden />
-                Exit
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5">
-                <Maximize2 className="h-3.5 w-3.5" aria-hidden />
-                Fullscreen
-              </span>
-            )}
-          </button>
-        </div>
       </div>
       {isPdf ? (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#333333] px-4 py-3">
