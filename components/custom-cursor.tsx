@@ -13,9 +13,19 @@ export function CustomCursor() {
   const [trail, setTrail] = useState<{ x: number; y: number }[]>([])
   const [isHovering, setIsHovering] = useState(false)
   const [isVisible, setIsVisible] = useState(false)
+  const [finePointer, setFinePointer] = useState(false)
   const lastMoveRef = useRef(0)
 
   useEffect(() => {
+    const mq = window.matchMedia("(pointer: fine)")
+    const syncPointer = () => setFinePointer(mq.matches)
+    syncPointer()
+    mq.addEventListener("change", syncPointer)
+    return () => mq.removeEventListener("change", syncPointer)
+  }, [])
+
+  useEffect(() => {
+    if (!finePointer) return
     const handleMouseMove = (e: MouseEvent) => {
       lastMoveRef.current = Date.now()
       setPosition({ x: e.clientX, y: e.clientY })
@@ -71,7 +81,9 @@ export function CustomCursor() {
       document.removeEventListener("mouseover", handleHoverStart)
       document.removeEventListener("mouseout", handleHoverEnd)
     }
-  }, [])
+  }, [finePointer])
+
+  if (!finePointer) return null
 
   return (
     <>

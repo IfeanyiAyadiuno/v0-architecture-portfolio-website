@@ -58,16 +58,20 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    cursor: none;
   }
   body {
     @apply bg-background text-foreground;
   }
 }
 
-/* Hide default cursor globally */
-html, body, * {
-  cursor: none !important;
+/* Custom cursor sites: only hide the system cursor when a fine pointer exists (mouse).
+   Applying cursor:none to everything breaks taps on many mobile browsers (e.g. iOS Safari). */
+@media (pointer: fine) {
+  html,
+  body,
+  * {
+    cursor: none !important;
+  }
 }
 
 /* Custom scrollbar */

@@ -51,7 +51,6 @@ export function DrawingModal({
     project.category === "commercial" ? "Commercial" : "Residential"
 
   const openKind = (slug: string) => {
-    onClose()
     let query = ""
     if (linkKindReturnToIndexModal === true) {
       const q = new URLSearchParams({ reopen: String(project.id) })
@@ -60,7 +59,12 @@ export function DrawingModal({
       }
       query = `?${q.toString()}`
     }
-    router.push(`/drawings-index/${project.id}/${slug}${query}`)
+    const href = `/drawings-index/${project.id}/${slug}${query}`
+    onClose()
+    // Defer navigation so touch devices finish the active gesture before unmount (iOS).
+    queueMicrotask(() => {
+      router.push(href)
+    })
   }
 
   return (
@@ -70,7 +74,7 @@ export function DrawingModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 md:p-6"
+        className="fixed inset-0 z-[100] flex touch-manipulation items-center justify-center bg-black/95 p-4 md:p-6"
         onClick={onClose}
       >
         <motion.div
@@ -78,7 +82,7 @@ export function DrawingModal({
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.96, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="relative w-full max-w-4xl border border-[#333333] bg-black"
+          className="relative z-[1] w-full max-w-4xl touch-manipulation border border-[#333333] bg-black"
           onClick={(e) => e.stopPropagation()}
         >
           <button
@@ -122,7 +126,7 @@ export function DrawingModal({
             </div>
 
             <div
-              className="flex w-full flex-col justify-center border-t border-[#333333] pt-8 md:w-[min(100%,300px)] md:border-l md:border-t-0 md:pl-10 md:pt-0"
+              className="relative z-10 flex w-full flex-col justify-center border-t border-[#333333] pt-8 md:w-[min(100%,300px)] md:border-l md:border-t-0 md:pl-10 md:pt-0"
               role="group"
               aria-label="Drawing type"
             >
@@ -140,7 +144,7 @@ export function DrawingModal({
                       <button
                         type="button"
                         onClick={() => openKind(kindToSlug(k))}
-                        className="group flex w-full items-center justify-between border border-[#333333] bg-black px-4 py-3.5 text-left font-mono text-xs uppercase tracking-[0.1em] text-[#AAAAAA] transition-colors duration-300 hover:border-white hover:text-white"
+                        className="group flex min-h-12 w-full touch-manipulation items-center justify-between border border-[#333333] bg-black px-4 py-3.5 text-left font-mono text-xs uppercase tracking-[0.1em] text-[#AAAAAA] transition-colors duration-300 hover:border-white hover:text-white active:bg-white/10"
                         data-clickable="true"
                       >
                         <span>{k}</span>
