@@ -35,13 +35,22 @@ export function Navigation() {
           [CHIDERA UZO]
         </Link>
 
-        <Link
-          href="/drawings-index"
-          className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
-        >
-          Drawings index
-          <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
-        </Link>
+        <div className="flex items-center gap-8">
+          <Link
+            href="/drawings-index"
+            className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
+          >
+            DRAWINGS INDEX
+            <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
+          </Link>
+          <Link
+            href="/#art"
+            className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
+          >
+            ART
+            <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
+          </Link>
+        </div>
       </nav>
     </motion.header>
   )

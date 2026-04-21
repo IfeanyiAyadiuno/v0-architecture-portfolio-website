@@ -25,7 +25,7 @@ export function ArtistSection() {
   }
 
   return (
-    <section className="py-20 px-6">
+    <section id="art" className="scroll-mt-28 py-20 px-6">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
