@@ -5,7 +5,6 @@ import { motion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   commercialProjects,
-  residentialProjects,
   getDrawingProjectById,
   type DrawingProject,
 } from "@/lib/data"
@@ -13,20 +12,15 @@ import { DrawingModal } from "./drawing-modal"
 import { DrawingProjectCard } from "./drawing-project-card"
 
 function DrawingGrid({
-  title,
   projects,
   onSelect,
 }: {
-  title: string
   projects: DrawingProject[]
   onSelect: (project: DrawingProject) => void
 }) {
   return (
-    <div className="space-y-6">
-      <h4 className="font-mono text-xs uppercase tracking-[0.1em] text-[#AAAAAA]">
-        {title}
-      </h4>
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
         {projects.map((project, index) => (
           <motion.div
             key={project.id}
@@ -66,14 +60,14 @@ function TechnicalDrawingsSectionInner() {
   }, [searchParams, router])
 
   return (
-    <section className="px-6 py-20">
+    <section id="drawings" className="scroll-mt-28 px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-16"
+          className="mb-8 md:mb-10"
         >
           <h2 className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold uppercase tracking-[0.05em] text-white md:text-5xl lg:text-6xl">
             Junior Technologist
@@ -88,44 +82,17 @@ function TechnicalDrawingsSectionInner() {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-12"
+          className="mb-6 md:mb-8"
         >
-          <h3 className="mb-8 font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA]">
+          <h3 className="mb-4 font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA] md:mb-5">
             Technical Drawings
           </h3>
         </motion.div>
 
-        <div
-          className={
-            residentialProjects.length > 0
-              ? "relative grid grid-cols-1 gap-12 lg:grid-cols-2"
-              : "mx-auto max-w-3xl"
-          }
-        >
-          <DrawingGrid
-            title="Commercial"
-            projects={commercialProjects}
-            onSelect={setSelectedProject}
-          />
-
-          {residentialProjects.length > 0 ? (
-            <>
-              <motion.div
-                initial={{ scaleY: 0 }}
-                whileInView={{ scaleY: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-                className="absolute bottom-0 left-1/2 top-0 hidden w-px origin-top bg-white/25 lg:block"
-              />
-
-              <DrawingGrid
-                title="Residential"
-                projects={residentialProjects}
-                onSelect={setSelectedProject}
-              />
-            </>
-          ) : null}
-        </div>
+        <DrawingGrid
+          projects={commercialProjects}
+          onSelect={setSelectedProject}
+        />
       </div>
 
       {selectedProject && (

@@ -194,7 +194,7 @@ function DrawingFigureMedia({
               src={src}
               alt={alt}
               fill
-              className="object-contain"
+              className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
@@ -302,7 +302,7 @@ export default function ProjectDrawingKindPage() {
                   data-clickable="true"
                 >
                   <ArrowLeft className="h-4 w-4" />
-                  Drawings index
+                  DRAWINGS INDEX
                 </Link>
               }
             >
@@ -337,7 +337,7 @@ export default function ProjectDrawingKindPage() {
                       data-clickable="true"
                     >
                       <ArrowLeft className="h-4 w-4" />
-                      Drawings index
+                      DRAWINGS INDEX
                     </Link>
                   }
                 >

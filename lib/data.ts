@@ -144,14 +144,56 @@ export function coverImageForProject(project: DrawingProject): string {
   return "/placeholder.svg"
 }
 
-// Renderings data
+// Renderings — files in `public/renders/` (spaces URL-encoded for `next/image`)
 export const renderings = [
-  { id: 1, title: "Lobby Perspective", software: "Enscape", year: "2024", type: "INTERIOR", image: "/placeholder.svg" },
-  { id: 2, title: "Aerial View", software: "V-Ray", year: "2023", type: "AERIAL", image: "/placeholder.svg" },
-  { id: 3, title: "Facade Study", software: "Twinmotion", year: "2024", type: "EXTERIOR", image: "/placeholder.svg" },
-  { id: 4, title: "Material Detail", software: "Enscape", year: "2023", type: "INTERIOR", image: "/placeholder.svg" },
-  { id: 5, title: "Night View", software: "V-Ray", year: "2024", type: "EXTERIOR", image: "/placeholder.svg" },
-  { id: 6, title: "Site Context", software: "Twinmotion", year: "2023", type: "AERIAL", image: "/placeholder.svg" },
+  {
+    id: 1,
+    title: "Mulder Residence — Exterior",
+    software: "Visualization",
+    year: "2024",
+    type: "EXTERIOR",
+    image: "/renders/MULDER%20RESIDENCE%20EXTERIOR.jpg",
+  },
+  {
+    id: 2,
+    title: "Mulder Residence — Kitchen",
+    software: "Visualization",
+    year: "2024",
+    type: "INTERIOR",
+    image: "/renders/MULDER%20RESIDENCE%20KITCHEN.jpg",
+  },
+  {
+    id: 3,
+    title: "Red Lion — Exterior",
+    software: "Visualization",
+    year: "2024",
+    type: "EXTERIOR",
+    image: "/renders/RED%20LION%20EXTERIOR.jpg",
+  },
+  {
+    id: 4,
+    title: "Student Housing — Rear",
+    software: "Visualization",
+    year: "2024",
+    type: "EXTERIOR",
+    image: "/renders/STUDENT%20HOUSING%20BACK.png",
+  },
+  {
+    id: 5,
+    title: "Student Housing — Front",
+    software: "Visualization",
+    year: "2024",
+    type: "EXTERIOR",
+    image: "/renders/STUDENT%20HOUSING%20FRONT.png",
+  },
+  {
+    id: 6,
+    title: "Island — Site layout",
+    software: "Visualization",
+    year: "2024",
+    type: "SITE",
+    image: "/renders/CHIDERAUZO%20ISLAND%20%28layout%29.jpg",
+  },
 ]
 
 // Artist works — files in `public/art/` (`%28` / `%29` = parentheses in filenames)

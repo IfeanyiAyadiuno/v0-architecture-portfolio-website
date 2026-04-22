@@ -111,7 +111,7 @@ export function DrawingModal({
                     src={coverSrc}
                     alt={project.title}
                     fill
-                    className="object-contain"
+                    className="object-cover"
                   />
                 )}
               </div>

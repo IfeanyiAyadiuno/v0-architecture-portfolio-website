@@ -100,7 +100,7 @@ export function Lightbox({ works, currentIndex, onClose, onNext, onPrev }: Light
               src={currentWork.image}
               alt={currentWork.title}
               fill
-              className="object-contain"
+              className="object-cover"
               sizes="100vw"
             />
           </motion.div>

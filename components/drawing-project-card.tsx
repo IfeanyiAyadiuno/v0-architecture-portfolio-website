@@ -59,6 +59,9 @@ export function DrawingProjectCard({
 
   const shellClass = cn(indexSpanClass, className)
 
+  /** Home grid: fixed ratio so every tile in a row matches height (no black band under shorter cards). */
+  const coverBoxAspect = layout === "home" ? 4 / 3 : aspectRatio
+
   const inner = (
     <>
       <button
@@ -69,7 +72,7 @@ export function DrawingProjectCard({
       >
         <div
           className="relative w-full overflow-hidden border border-[#333333] bg-[#0a0a0a] transition-[border-color] duration-300 group-hover:border-white"
-          style={{ aspectRatio }}
+          style={{ aspectRatio: coverBoxAspect }}
         >
           <DrawingProjectCover
             src={coverSrc}
@@ -88,7 +91,7 @@ export function DrawingProjectCard({
           </div>
         </div>
 
-        <div className="mt-3 flex items-start justify-between gap-2">
+        <div className="mt-2 flex shrink-0 items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <p className="truncate font-mono text-xs text-white">
               {project.title}

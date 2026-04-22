@@ -13,7 +13,7 @@ type DrawingProjectCoverProps = {
 
 /**
  * Grid / card cover: raster via `next/image`, PDF cover via embedded viewer.
- * Square cards: raster covers use contain so the full sheet is visible; PDFs use a slight iframe crop to limit grey bands.
+ * Rasters use cover so the frame stays filled (no letterboxing); PDFs use iframe crop to limit grey bands.
  */
 export function DrawingProjectCover({
   src,
@@ -41,7 +41,7 @@ export function DrawingProjectCover({
       src={src}
       alt={alt}
       fill
-      className="object-contain opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+      className="object-cover opacity-70 transition-opacity duration-300 group-hover:opacity-100"
       sizes={sizes}
       onLoadingComplete={(img) =>
         onRasterLoaded?.({

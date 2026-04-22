@@ -40,9 +40,6 @@ export function Footer() {
                 </Link>
               </p>
             </div>
-            <button className="mt-4 px-6 py-3 border border-white text-white font-mono text-sm uppercase tracking-[0.05em] hover:bg-white hover:text-black transition-all duration-300">
-              PDF Portfolio Download
-            </button>
           </div>
 
           <div className="flex flex-col justify-end items-start md:items-end space-y-2 font-mono text-sm text-[#AAAAAA]">

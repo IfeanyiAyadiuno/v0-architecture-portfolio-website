@@ -1,6 +1,8 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
+import { ChevronDown } from "lucide-react"
+import Link from "next/link"
 
 const letterVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -35,6 +37,7 @@ function AnimatedText({ text, className }: { text: string; className?: string })
 }
 
 export function HeroSection() {
+  const reduceMotion = useReducedMotion()
   const line1 = "JUNIOR TECHNOLOGIST + ARTIST"
   const line2 = "[CHIDERA UZO]"
   const line3 = "Based in [Edmonton] — Available 2025"
@@ -80,13 +83,33 @@ export function HeroSection() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 0.6 }}
-        className="absolute bottom-12 left-1/2 z-10 -translate-x-1/2"
+        className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 md:bottom-12"
       >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-px h-12 bg-gradient-to-b from-white to-transparent"
-        />
+        <Link
+          href="/#drawings"
+          data-clickable="true"
+          className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        >
+          <span className="sr-only">Scroll to work below</span>
+          <span
+            aria-hidden
+            className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#AAAAAA] transition-colors group-hover:text-white/90"
+          >
+            Scroll
+          </span>
+          <motion.span
+            aria-hidden
+            className="flex flex-col items-center text-white/80 transition-colors group-hover:text-white"
+            animate={reduceMotion ? { y: 0 } : { y: [0, 6, 0] }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+            }
+          >
+            <ChevronDown className="h-6 w-6" strokeWidth={1.5} />
+          </motion.span>
+        </Link>
       </motion.div>
     </section>
   )

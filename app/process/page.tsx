@@ -163,7 +163,7 @@ export default function ProcessPage() {
                 src={zoomedImage}
                 alt="Process image"
                 fill
-                className="object-contain"
+                className="object-cover"
               />
             </motion.div>
           </motion.div>

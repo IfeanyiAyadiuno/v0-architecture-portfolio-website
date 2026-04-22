@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import { renderings } from "@/lib/data"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
 import { RenderingLightbox } from "./rendering-lightbox"
 
 const SLIDE_GAP_PX = 20
@@ -78,6 +78,14 @@ export function RenderingsSection() {
     [emblaApi]
   )
 
+  const scrollPrev = useCallback(() => {
+    emblaApi?.scrollPrev()
+  }, [emblaApi])
+
+  const scrollNext = useCallback(() => {
+    emblaApi?.scrollNext()
+  }, [emblaApi])
+
   const closeLightbox = useCallback(() => setLightboxIndex(null), [])
   const goNextLightbox = useCallback(() => {
     setLightboxIndex((i) =>
@@ -91,14 +99,14 @@ export function RenderingsSection() {
   }, [])
 
   return (
-    <section className="overflow-hidden px-6 py-20">
+    <section className="overflow-hidden px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-12"
+          className="mb-6 md:mb-8"
         >
           <h3 className="font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA]">
             Renderings
@@ -106,7 +114,33 @@ export function RenderingsSection() {
         </motion.div>
 
         <div className="relative">
-          <div className="overflow-hidden" ref={emblaRef}>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                scrollPrev()
+              }}
+              className="absolute left-0 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-md border border-white/25 bg-black/75 text-white backdrop-blur-sm transition-colors hover:border-white/50 hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black md:left-1 md:h-12 md:w-12"
+              aria-label="Previous slide"
+              data-clickable="true"
+            >
+              <ChevronLeft className="h-6 w-6 shrink-0" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                scrollNext()
+              }}
+              className="absolute right-0 top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 touch-manipulation items-center justify-center rounded-md border border-white/25 bg-black/75 text-white backdrop-blur-sm transition-colors hover:border-white/50 hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black md:right-1 md:h-12 md:w-12"
+              aria-label="Next slide"
+              data-clickable="true"
+            >
+              <ChevronRight className="h-6 w-6 shrink-0" aria-hidden />
+            </button>
+
+            <div className="overflow-hidden" ref={emblaRef}>
             <div
               className="flex touch-pan-x"
               style={{ marginLeft: -SLIDE_GAP_PX }}
@@ -161,6 +195,7 @@ export function RenderingsSection() {
                   </div>
                 )
               })}
+            </div>
             </div>
           </div>
 

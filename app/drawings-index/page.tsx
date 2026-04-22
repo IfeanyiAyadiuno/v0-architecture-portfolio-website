@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect, Suspense } from "react"
-import { motion, AnimatePresence, LayoutGroup } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { CustomCursor } from "@/components/custom-cursor"
@@ -10,9 +10,7 @@ import { PageTransition } from "@/components/page-transition"
 import { DrawingModal } from "@/components/drawing-modal"
 import { DrawingProjectCard } from "@/components/drawing-project-card"
 import {
-  allDrawingProjects,
   commercialProjects,
-  residentialProjects,
   getDrawingProjectById,
   type DrawingProject,
 } from "@/lib/data"
@@ -26,7 +24,6 @@ const sortOptions = [
 function DrawingsIndexContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [activeFilter, setActiveFilter] = useState<string>("All")
   const [sortBy, setSortBy] = useState<"title" | "year">("title")
   const [selectedProject, setSelectedProject] = useState<DrawingProject | null>(
     null
@@ -44,29 +41,14 @@ function DrawingsIndexContent() {
     router.replace("/drawings-index", { scroll: false })
   }, [searchParams, router])
 
-  const filterOptions = useMemo(() => {
-    const base = ["All", "Commercial"] as const
-    return residentialProjects.length > 0
-      ? ([...base, "Residential"] as const)
-      : base
-  }, [residentialProjects.length])
-
-  const filteredAndSortedProjects = useMemo(() => {
-    let filtered: DrawingProject[] = [...allDrawingProjects]
-
-    if (activeFilter === "Commercial") {
-      filtered = commercialProjects
-    } else if (activeFilter === "Residential") {
-      filtered = residentialProjects
-    }
-
-    return [...filtered].sort((a, b) => {
+  const sortedProjects = useMemo(() => {
+    return [...commercialProjects].sort((a, b) => {
       if (sortBy === "year") {
         return b.year.localeCompare(a.year)
       }
       return a.title.localeCompare(b.title)
     })
-  }, [activeFilter, sortBy])
+  }, [sortBy])
 
   return (
     <>
@@ -85,38 +67,7 @@ function DrawingsIndexContent() {
                 Drawings Index
               </h1>
 
-              <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                <LayoutGroup>
-                  <div className="flex flex-wrap gap-2">
-                    {filterOptions.map((filter) => (
-                      <motion.button
-                        key={filter}
-                        layout
-                        onClick={() => setActiveFilter(filter)}
-                        className={`relative px-4 py-2 font-mono text-xs uppercase tracking-wide transition-colors ${
-                          activeFilter === filter
-                            ? "text-black"
-                            : "text-[#AAAAAA] hover:text-white"
-                        }`}
-                        data-clickable="true"
-                      >
-                        {activeFilter === filter && (
-                          <motion.div
-                            layoutId="activeFilter"
-                            className="absolute inset-0 bg-white"
-                            transition={{
-                              type: "spring",
-                              stiffness: 300,
-                              damping: 30,
-                            }}
-                          />
-                        )}
-                        <span className="relative z-10">{filter}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </LayoutGroup>
-
+              <div className="flex justify-end">
                 <div className="relative">
                   <button
                     onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
@@ -160,33 +111,31 @@ function DrawingsIndexContent() {
               </div>
             </motion.div>
 
-            <LayoutGroup>
-              <motion.div
-                layout
-                className="grid grid-cols-2 items-start gap-5 md:grid-cols-3 lg:grid-cols-4"
-              >
-                <AnimatePresence mode="popLayout">
-                  {filteredAndSortedProjects.map((project) => (
-                    <DrawingProjectCard
-                      key={project.id}
-                      layout="index"
-                      project={project}
-                      onSelect={setSelectedProject}
-                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
-            </LayoutGroup>
+            <motion.div
+              layout
+              className="grid grid-cols-2 items-start gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4"
+            >
+              <AnimatePresence mode="popLayout">
+                {sortedProjects.map((project) => (
+                  <DrawingProjectCard
+                    key={project.id}
+                    layout="index"
+                    project={project}
+                    onSelect={setSelectedProject}
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                  />
+                ))}
+              </AnimatePresence>
+            </motion.div>
 
-            {filteredAndSortedProjects.length === 0 && (
+            {sortedProjects.length === 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="py-20 text-center"
               >
                 <p className="font-mono text-sm text-[#AAAAAA]">
-                  No drawings found for this filter.
+                  No drawings to show yet.
                 </p>
               </motion.div>
             )}

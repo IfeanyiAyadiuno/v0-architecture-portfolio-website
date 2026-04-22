@@ -105,7 +105,7 @@ export function RenderingLightbox({
               src={current.image}
               alt={current.title}
               fill
-              className="object-contain"
+              className="object-cover"
               sizes="100vw"
               priority
             />
