@@ -79,7 +79,7 @@ function ArtistVideoStrip({
             muted
             playsInline
             loop
-            preload="auto"
+            preload="metadata"
             autoPlay={reduceMotion !== true}
             onError={() => setFailed(true)}
             aria-label={ariaLabel}

@@ -13,6 +13,17 @@ import { PageTransition } from "@/components/page-transition"
 import { getDrawingProjectById, slugToKind } from "@/lib/data"
 import { cn, isPdfPath, pdfIframeSrc } from "@/lib/utils"
 
+/** Human-readable file name from a public URL (e.g. plans PDF path → "MAIN FLOOR PLAN.pdf"). */
+function sheetFileLabelFromUrl(src: string): string {
+  const path = src.split("?")[0] ?? src
+  const segment = path.split("/").pop() ?? path
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
 function requestFullscreenEl(el: HTMLElement) {
   const anyEl = el as HTMLElement & {
     webkitRequestFullscreen?: () => Promise<void>
@@ -56,10 +67,12 @@ function DrawingFigureMedia({
   src,
   alt,
   isPdf,
+  fileLabel,
 }: {
   src: string
   alt: string
   isPdf: boolean
+  fileLabel: string
 }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [nativeFs, setNativeFs] = useState(false)
@@ -139,16 +152,15 @@ function DrawingFigureMedia({
           nativeFs && !immersiveFs && "min-h-screen"
         )}
       >
-        {/* Controls above the iframe on small screens so taps aren’t eaten by the PDF viewer */}
-        <div
-          className={cn(
-            "relative z-30 mb-2 flex shrink-0 justify-end md:absolute md:top-2 md:right-2 md:mb-0"
-          )}
-        >
+        {/* File name + fullscreen — always visible so users know the sheet before expanding */}
+        <div className="relative z-30 flex shrink-0 items-start justify-between gap-3 border-b border-[#333333] px-3 py-2.5 md:px-4 md:py-3">
+          <p className="min-w-0 flex-1 break-words font-mono text-[11px] font-medium leading-snug tracking-wide text-white md:text-xs">
+            {fileLabel}
+          </p>
           <button
             type="button"
             onClick={() => void toggleFullscreen()}
-            className="touch-manipulation border border-[#333333] bg-black/95 px-4 py-3 font-mono text-[10px] uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:border-white hover:text-white active:bg-white/10 md:px-3 md:py-2"
+            className="shrink-0 touch-manipulation border border-[#333333] bg-black/95 px-3 py-2 font-mono text-[10px] uppercase tracking-wide text-white backdrop-blur-sm transition-colors hover:border-white hover:text-white active:bg-white/10 md:px-3 md:py-2"
             data-clickable="true"
           >
             {isFs ? (
@@ -168,7 +180,7 @@ function DrawingFigureMedia({
           isFs ? (
             <iframe
               key={pdfSrc}
-              title={alt}
+              title={fileLabel}
               src={pdfSrc}
               className="min-h-0 w-full flex-1 basis-0 border-0 bg-black"
             />
@@ -177,7 +189,7 @@ function DrawingFigureMedia({
             <div className="relative aspect-[11/8.5] w-full">
               <iframe
                 key={pdfSrc}
-                title={alt}
+                title={fileLabel}
                 src={pdfSrc}
                 className="absolute inset-0 h-full w-full border-0 bg-black"
               />
@@ -186,15 +198,16 @@ function DrawingFigureMedia({
         ) : (
           <div
             className={cn(
-              "relative w-full",
+              "relative w-full bg-black",
+              /* `object-contain` (below) so PNG elevations show the full sheet in preview and fullscreen — `cover` was cropping when the flex area was taller than the image aspect. */
               isFs ? "min-h-0 flex-1" : "aspect-[4/3]"
             )}
           >
             <Image
               src={src}
-              alt={alt}
+              alt={fileLabel}
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
@@ -284,6 +297,17 @@ export default function ProjectDrawingKindPage() {
 
   const sheet = project && kind ? project.drawings[kind] : undefined
 
+  /** AMBULANCE STATION Plans: floor + RCP as one row (side by side from `md`). */
+  const ambulancePlanPairRows = useMemo(() => {
+    if (!project || !kind || !sheet?.images.length) return null
+    if (project.id !== 1 || kind !== "Plans") return null
+    const rows: string[][] = []
+    for (let i = 0; i < sheet.images.length; i += 2) {
+      rows.push(sheet.images.slice(i, i + 2))
+    }
+    return rows
+  }, [project, kind, sheet])
+
   if (!project || !kind || !sheet) {
     return (
       <>
@@ -358,33 +382,82 @@ export default function ProjectDrawingKindPage() {
                 <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 font-mono text-[10px] uppercase tracking-wide text-[#AAAAAA]">
                   <span>Scale: {sheet.scale}</span>
                   <span>Software: {sheet.software}</span>
-                  <span>Sheet: {sheet.sheetNumber}</span>
                 </div>
               </header>
 
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                {sheet.images.map((src, index) => (
-                  <motion.figure
-                    key={`${src}-${index}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.06 }}
-                    className="border border-[#333333] bg-[#0a0a0a]"
-                  >
-                    <DrawingFigureMedia
-                      src={src}
-                      alt={`${project.title} — ${kind} — ${index + 1}`}
-                      isPdf={isPdfPath(src)}
-                    />
-                    <figcaption className="border-t border-[#333333] px-4 py-3 font-mono text-[10px] uppercase tracking-wide text-[#AAAAAA]">
-                      {kind}{" "}
-                      {sheet.images.length > 1
-                        ? `— ${index + 1} / ${sheet.images.length}`
-                        : ""}
-                    </figcaption>
-                  </motion.figure>
-                ))}
-              </div>
+              {ambulancePlanPairRows ? (
+                <div className="flex flex-col gap-8">
+                  {ambulancePlanPairRows.map((row, rowIndex) => (
+                    <div
+                      key={`ambulance-plan-pair-${rowIndex}`}
+                      className="grid grid-cols-1 gap-8 md:grid-cols-2"
+                    >
+                      {row.map((src, colIndex) => {
+                        const index = rowIndex * 2 + colIndex
+                        const fileLabel = sheetFileLabelFromUrl(src)
+                        return (
+                          <motion.figure
+                            key={`${src}-${index}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.4,
+                              delay: index * 0.06,
+                            }}
+                            className="min-w-0 border border-[#333333] bg-[#0a0a0a]"
+                          >
+                            <DrawingFigureMedia
+                              src={src}
+                              alt={`${project.title} — ${kind} — ${fileLabel}`}
+                              isPdf={isPdfPath(src)}
+                              fileLabel={fileLabel}
+                            />
+                            <figcaption className="border-t border-[#333333] px-4 py-3 font-mono text-[10px] tracking-wide text-[#AAAAAA]">
+                              <span className="text-white/90">{fileLabel}</span>
+                              {sheet.images.length > 1 ? (
+                                <span className="mt-1 block normal-case tracking-normal text-[#888888]">
+                                  {index + 1} of {sheet.images.length} in{" "}
+                                  {kind}
+                                </span>
+                              ) : null}
+                            </figcaption>
+                          </motion.figure>
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                  {sheet.images.map((src, index) => {
+                    const fileLabel = sheetFileLabelFromUrl(src)
+                    return (
+                      <motion.figure
+                        key={`${src}-${index}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.06 }}
+                        className="border border-[#333333] bg-[#0a0a0a]"
+                      >
+                        <DrawingFigureMedia
+                          src={src}
+                          alt={`${project.title} — ${kind} — ${fileLabel}`}
+                          isPdf={isPdfPath(src)}
+                          fileLabel={fileLabel}
+                        />
+                        <figcaption className="border-t border-[#333333] px-4 py-3 font-mono text-[10px] tracking-wide text-[#AAAAAA]">
+                          <span className="text-white/90">{fileLabel}</span>
+                          {sheet.images.length > 1 ? (
+                            <span className="mt-1 block normal-case tracking-normal text-[#888888]">
+                              {index + 1} of {sheet.images.length} in {kind}
+                            </span>
+                          ) : null}
+                        </figcaption>
+                      </motion.figure>
+                    )
+                  })}
+                </div>
+              )}
             </motion.div>
           </div>
 

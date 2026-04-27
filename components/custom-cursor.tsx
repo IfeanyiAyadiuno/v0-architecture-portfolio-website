@@ -105,6 +105,7 @@ export function CustomCursor() {
         height: 8,
         opacity: 0,
         transform: "translate3d(0,0,0)",
+        pointerEvents: "none",
       }}
       aria-hidden
     />

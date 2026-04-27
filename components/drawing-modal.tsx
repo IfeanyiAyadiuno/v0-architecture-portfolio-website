@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
@@ -36,6 +36,18 @@ export function DrawingModal({
   kindReturnOrigin = "drawings-index",
 }: DrawingModalProps) {
   const router = useRouter()
+
+  useEffect(() => {
+    if (!project) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        onClose()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [project, onClose])
 
   const availableKinds = useMemo(() => {
     if (!project) return []

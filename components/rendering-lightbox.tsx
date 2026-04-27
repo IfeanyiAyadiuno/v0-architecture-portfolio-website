@@ -37,6 +37,27 @@ export function RenderingLightbox({
     }
   }, [])
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        onClose()
+        return
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        onPrev()
+        return
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault()
+        onNext()
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [onClose, onNext, onPrev])
+
   if (!current || !container) return null
 
   return createPortal(

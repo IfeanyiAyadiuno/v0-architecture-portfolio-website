@@ -1,10 +1,10 @@
 "use client"
 
-import { motion, useReducedMotion } from "framer-motion"
+import { motion, useReducedMotion, type Variants } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
 
-const letterVariants = {
+const letterVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
@@ -12,7 +12,7 @@ const letterVariants = {
     transition: {
       delay: i * 0.03,
       duration: 0.4,
-      ease: "easeOut",
+      ease: [0.22, 1, 0.36, 1],
     },
   }),
 }

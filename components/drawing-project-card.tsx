@@ -59,8 +59,8 @@ export function DrawingProjectCard({
 
   const shellClass = cn(indexSpanClass, className)
 
-  /** Home grid: fixed ratio so every tile in a row matches height (no black band under shorter cards). */
-  const coverBoxAspect = layout === "home" ? 4 / 3 : aspectRatio
+  /** Home grid: fixed wide ratio so landscape covers (e.g. elevations) fit without harsh crop; pairs share row height. */
+  const coverBoxAspect = layout === "home" ? 2 : aspectRatio
 
   const inner = (
     <>

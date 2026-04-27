@@ -10,7 +10,6 @@ export type DrawingSheet = {
   images: string[]
   scale: string
   software: string
-  sheetNumber: string
 }
 
 export type ProjectCategory = "commercial" | "residential"
@@ -54,11 +53,10 @@ export function slugToKind(slug: string): DrawingKind | null {
 function sheet(
   scale: string,
   software: string,
-  sheetNumber: string,
   images: string | string[] = "/placeholder.svg"
 ): DrawingSheet {
   const list = typeof images === "string" ? [images] : images
-  return { images: list, scale, software, sheetNumber }
+  return { images: list, scale, software }
 }
 
 export const commercialProjects: DrawingProject[] = [
@@ -70,17 +68,24 @@ export const commercialProjects: DrawingProject[] = [
     coverFile: "COVER PAGE AMBULANCE.jpg",
     coverAspectRatio: 1499 / 656,
     drawings: {
-      Plans: sheet("1:100", "Revit", "A2.1/A2.4", [
+      Plans: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20MAIN%20FLOOR%20PLAN.pdf",
-        "/drawings/ambulance-station/AMBULANCE%20STATION%20MAIN%20FLOOR%20RCP%20-%20A2.4.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20MAIN%20FLOOR%20RCP.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20SECOND%20FLOOR%20PLAN.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20SECOND%20FLOOR%20RCP.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20THIRD%20FLOOR%20%26%20ROOF%20PLAN.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20THIRD%20FLOOR%20RCP.pdf",
       ]),
-      Sections: sheet("1:100", "Rhino", "A-101", [
+      Sections: sheet("1:100", "Revit", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20BUILDING%20SECTION.pdf",
         "/drawings/ambulance-station/AMBULANCE%20STATION%20PLAN%20%26%20SECTION%20DETAILS.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS.pdf",
       ]),
-      Elevations: sheet("1:150", "AutoCAD", "A-102", [
-        "/drawings/ambulance-station/AMBULANCE%20STATION%20ELEVATION.pdf",
+      Elevations: sheet("1:100", "Revit", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20NORTH%20%26%20EAST%20ELEVATIONS.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20%20SOUTH%20%26%20WEST%20ELEVATIONS.pdf",
       ]),
-      Details: sheet("1:20", "Rhino", "A-103", [
+      Details: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20LEGEND%20%26%20SCHEDULES.pdf",
       ]),
     },
@@ -93,21 +98,21 @@ export const commercialProjects: DrawingProject[] = [
     coverFile: "CAFE COVER.jpg",
     coverAspectRatio: 1311 / 792,
     drawings: {
-      Plans: sheet("1:200", "Revit", "A-102", [
+      Plans: sheet("1:100", "Revit", [
         "/drawings/cafe/MAIN%20FLOOR%20PLAN.pdf",
         "/drawings/cafe/SECOND%20FLOOR%20PLAN.pdf",
         "/drawings/cafe/THIRD%20FLOOR%20PLAN.pdf",
       ]),
-      Sections: sheet("1:100", "Revit", "A-103", [
+      Sections: sheet("1:100", "Revit", [
         "/drawings/cafe/BUILDING%20SECTION.pdf",
         "/drawings/cafe/STAIR%20SECTION.pdf",
       ]),
-      Elevations: sheet("1:150", "Revit", "A-104", [
-        "/drawings/cafe/CAFE%20EAST%20ELEVATION.pdf",
-        "/drawings/cafe/CAFE%20NORTH%20ELEVATION.pdf",
-        "/drawings/cafe/CAFE%20SOUTH%20ELEVATION.pdf",
+      Elevations: sheet("1:100", "Revit", [
+        "/drawings/cafe/NORTH%20ELEVATION.png",
+        "/drawings/cafe/SOUTH%20ELEVATION.png",
+        "/drawings/cafe/EAST%20ELEVATION.png",
       ]),
-      Details: sheet("1:25", "Rhino", "A-105"),
+      Details: sheet("1:100", "Revit"),
     },
   },
 ]
@@ -149,7 +154,7 @@ export const renderings = [
   {
     id: 1,
     title: "Mulder Residence — Exterior",
-    software: "Visualization",
+    software: "Revit",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/MULDER%20RESIDENCE%20EXTERIOR.jpg",
@@ -157,7 +162,7 @@ export const renderings = [
   {
     id: 2,
     title: "Mulder Residence — Kitchen",
-    software: "Visualization",
+    software: "Revit",
     year: "2024",
     type: "INTERIOR",
     image: "/renders/MULDER%20RESIDENCE%20KITCHEN.jpg",
@@ -165,7 +170,7 @@ export const renderings = [
   {
     id: 3,
     title: "Red Lion — Exterior",
-    software: "Visualization",
+    software: "Revit",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/RED%20LION%20EXTERIOR.jpg",
@@ -173,7 +178,7 @@ export const renderings = [
   {
     id: 4,
     title: "Student Housing — Rear",
-    software: "Visualization",
+    software: "Revit",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/STUDENT%20HOUSING%20BACK.png",
@@ -181,7 +186,7 @@ export const renderings = [
   {
     id: 5,
     title: "Student Housing — Front",
-    software: "Visualization",
+    software: "Revit",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/STUDENT%20HOUSING%20FRONT.png",
@@ -189,7 +194,7 @@ export const renderings = [
   {
     id: 6,
     title: "Island — Site layout",
-    software: "Visualization",
+    software: "Revit",
     year: "2024",
     type: "SITE",
     image: "/renders/CHIDERAUZO%20ISLAND%20%28layout%29.jpg",

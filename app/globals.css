@@ -59,6 +59,14 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -71,6 +79,12 @@
   body,
   * {
     cursor: none !important;
+  }
+  /* After blanket cursor:none — restore text caret in fields. */
+  input,
+  textarea,
+  [contenteditable="true"] {
+    cursor: text !important;
   }
 }
 

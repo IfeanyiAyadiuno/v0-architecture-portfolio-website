@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { Navigation } from "@/components/navigation"
@@ -17,6 +17,18 @@ export default function ProcessPage() {
   const toggleExpand = (id: number) => {
     setExpandedId(expandedId === id ? null : id)
   }
+
+  useEffect(() => {
+    if (!zoomedImage) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault()
+        setZoomedImage(null)
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [zoomedImage])
 
   return (
     <>

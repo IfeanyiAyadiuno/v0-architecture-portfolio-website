@@ -30,7 +30,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans antialiased bg-black text-white">
+      <body className="font-sans antialiased overflow-x-hidden bg-black text-white">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
