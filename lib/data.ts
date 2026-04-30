@@ -144,22 +144,14 @@ export const commercialProjects: DrawingProject[] = [
     coverFit: "contain",
     drawings: {
       Plans: sheet("1:100", "Revit", [
-        "/drawings/blue%20parrot/BLUE%20PARROT%20ENLARGED%20WASHROOM%20PLANS.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20MAIN%20FLOOR%20%26%20MEZZANINE%20PLANS.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20ROOF%20PLAN.pdf",
+        "/drawings/blue%20parrot/plans/BLUE%20PARROT%20ENLARGED%20WASHROOM%20PLANS.pdf",
+        "/drawings/blue%20parrot/plans/BLUE%20PARROT%20MAIN%20FLOOR%20%26%20MEZZANINE%20PLANS.pdf",
+        "/drawings/blue%20parrot/plans/BLUE%20PARROT%20ROOF%20PLAN.pdf",
       ]),
-      Sections: sheet("1:100", "Revit", [
-        "/drawings/blue%20parrot/BLUE%20PARROT%20BUILDING%20SECTION.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20BUILDING%20SECTIONS%202.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20WALL%20SECTIONS.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20WALL%20SECTIONS%202.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20NORTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20SOUTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
-      ]),
-      Elevations: sheet("1:100", "Revit", [
-        "/drawings/blue%20parrot/BLUE%20PARROT%20NORTH%20%26%20EAST%20ELEVATIONS.pdf",
-        "/drawings/blue%20parrot/BLUE%20PARROT%20SOUTH%20%26%20WEST%20ELEVATIONS.pdf",
-      ]),
+      // Auto-populated at runtime from `public/drawings/blue parrot/sections/`.
+      Sections: sheet("1:100", "Revit", []),
+      // Auto-populated at runtime from `public/drawings/blue parrot/elevations/`.
+      Elevations: sheet("1:100", "Revit", []),
     },
   },
 ]

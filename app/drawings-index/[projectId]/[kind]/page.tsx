@@ -325,17 +325,53 @@ export default function ProjectDrawingKindPage() {
   )
 
   const sheet = project && kind ? project.drawings[kind] : undefined
+  const [runtimeImages, setRuntimeImages] = useState<string[] | null>(null)
+
+  useEffect(() => {
+    setRuntimeImages(null)
+    if (!project || !kind) return
+    if (project.title !== "BLUE PARROT") return
+    const endpoint =
+      kind === "Elevations"
+        ? "/api/drawings/blue-parrot/elevations"
+        : kind === "Sections"
+          ? "/api/drawings/blue-parrot/sections"
+          : null
+    if (!endpoint) return
+
+    const ac = new AbortController()
+    ;(async () => {
+      try {
+        const res = await fetch(endpoint, {
+          signal: ac.signal,
+        })
+        if (!res.ok) throw new Error("Failed to load elevations")
+        const data = (await res.json()) as { files?: unknown }
+        const files = Array.isArray(data.files)
+          ? data.files.filter((x): x is string => typeof x === "string")
+          : []
+        setRuntimeImages(files)
+      } catch {
+        if (ac.signal.aborted) return
+        setRuntimeImages([])
+      }
+    })()
+
+    return () => ac.abort()
+  }, [kind, project])
+
+  const effectiveImages = runtimeImages ?? sheet?.images ?? []
 
   /** AMBULANCE STATION Plans: floor + RCP as one row (side by side from `md`). */
   const ambulancePlanPairRows = useMemo(() => {
-    if (!project || !kind || !sheet?.images.length) return null
+    if (!project || !kind || !effectiveImages.length) return null
     if (project.id !== 1 || kind !== "Plans") return null
     const rows: string[][] = []
-    for (let i = 0; i < sheet.images.length; i += 2) {
-      rows.push(sheet.images.slice(i, i + 2))
+    for (let i = 0; i < effectiveImages.length; i += 2) {
+      rows.push(effectiveImages.slice(i, i + 2))
     }
     return rows
-  }, [project, kind, sheet])
+  }, [effectiveImages, project, kind])
 
   if (!project || !kind || !sheet) {
     return (
@@ -443,9 +479,9 @@ export default function ProjectDrawingKindPage() {
                             />
                             <figcaption className="border-t border-[#333333] px-4 py-3 font-mono text-[10px] tracking-wide text-[#AAAAAA]">
                               <span className="text-white/90">{fileLabel}</span>
-                              {sheet.images.length > 1 ? (
+                              {effectiveImages.length > 1 ? (
                                 <span className="mt-1 block normal-case tracking-normal text-[#888888]">
-                                  {index + 1} of {sheet.images.length} in{" "}
+                                  {index + 1} of {effectiveImages.length} in{" "}
                                   {kind}
                                 </span>
                               ) : null}
@@ -458,7 +494,12 @@ export default function ProjectDrawingKindPage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                  {sheet.images.map((src, index) => {
+                  {effectiveImages.length === 0 ? (
+                    <p className="font-mono text-sm text-[#AAAAAA]">
+                      No sheets uploaded for this drawing type yet.
+                    </p>
+                  ) : null}
+                  {effectiveImages.map((src, index) => {
                     const fileLabel = sheetFileLabelFromUrl(src)
                     return (
                       <motion.figure
@@ -476,9 +517,9 @@ export default function ProjectDrawingKindPage() {
                         />
                         <figcaption className="border-t border-[#333333] px-4 py-3 font-mono text-[10px] tracking-wide text-[#AAAAAA]">
                           <span className="text-white/90">{fileLabel}</span>
-                          {sheet.images.length > 1 ? (
+                          {effectiveImages.length > 1 ? (
                             <span className="mt-1 block normal-case tracking-normal text-[#888888]">
-                              {index + 1} of {sheet.images.length} in {kind}
+                              {index + 1} of {effectiveImages.length} in {kind}
                             </span>
                           ) : null}
                         </figcaption>
