@@ -2,7 +2,13 @@ import { isPdfPath } from "@/lib/utils"
 
 // —— Technical drawings: project-first model (Plans / Sections / Elevations / Details) ——
 
-export const DRAWING_KINDS = ["Plans", "Sections", "Elevations", "Details"] as const
+export const DRAWING_KINDS = [
+  "Plans",
+  "Sections",
+  "Elevations",
+  "Details",
+  "Schedules",
+] as const
 export type DrawingKind = (typeof DRAWING_KINDS)[number]
 
 export type DrawingSheet = {
@@ -29,6 +35,12 @@ export type DrawingProject = {
    * raster covers still refine from intrinsic size when this is omitted.
    */
   coverAspectRatio?: number
+  /**
+   * How to fit raster covers inside the card frame.
+   * - contain: show entire image (may letterbox)
+   * - cover: fill frame (may crop)
+   */
+  coverFit?: "contain" | "cover"
   drawings: Partial<Record<DrawingKind, DrawingSheet>>
 }
 
@@ -37,6 +49,7 @@ export const KIND_TO_SLUG: Record<DrawingKind, string> = {
   Sections: "section",
   Elevations: "elevation",
   Details: "detail",
+  Schedules: "schedule",
 }
 
 export function kindToSlug(kind: DrawingKind): string {
@@ -78,15 +91,23 @@ export const commercialProjects: DrawingProject[] = [
       ]),
       Sections: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20BUILDING%20SECTION.pdf",
-        "/drawings/ambulance-station/AMBULANCE%20STATION%20PLAN%20%26%20SECTION%20DETAILS.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20BUILDING%20SECTIONS%202.pdf",
         "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS%202.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20NORTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20SOUTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
       ]),
       Elevations: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20NORTH%20%26%20EAST%20ELEVATIONS.pdf",
         "/drawings/ambulance-station/AMBULANCE%20STATION%20%20SOUTH%20%26%20WEST%20ELEVATIONS.pdf",
       ]),
       Details: sheet("1:100", "Revit", [
-        "/drawings/ambulance-station/AMBULANCE%20STATION%20LEGEND%20%26%20SCHEDULES.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20PLAN%20%26%20SECTION%20DETAILS.pdf",
+      ]),
+      Schedules: sheet("1:100", "Revit", [
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20LIFE%20SAFETY%20PLAN.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20CONSTRUCTION%20ASSEMBLIES%20%26%20NOTES.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20DOOR%20%26%20WINDOW%20SCHEDULE.pdf",
       ]),
     },
   },
@@ -112,7 +133,33 @@ export const commercialProjects: DrawingProject[] = [
         "/drawings/cafe/SOUTH%20ELEVATION.png",
         "/drawings/cafe/EAST%20ELEVATION.png",
       ]),
-      Details: sheet("1:100", "Revit"),
+    },
+  },
+  {
+    id: 3,
+    title: "BLUE PARROT",
+    year: "2025",
+    category: "commercial",
+    coverFile: "BLUE PARROT BAR.png",
+    coverFit: "contain",
+    drawings: {
+      Plans: sheet("1:100", "Revit", [
+        "/drawings/blue%20parrot/BLUE%20PARROT%20ENLARGED%20WASHROOM%20PLANS.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20MAIN%20FLOOR%20%26%20MEZZANINE%20PLANS.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20ROOF%20PLAN.pdf",
+      ]),
+      Sections: sheet("1:100", "Revit", [
+        "/drawings/blue%20parrot/BLUE%20PARROT%20BUILDING%20SECTION.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20BUILDING%20SECTIONS%202.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20WALL%20SECTIONS.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20WALL%20SECTIONS%202.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20NORTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20SOUTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
+      ]),
+      Elevations: sheet("1:100", "Revit", [
+        "/drawings/blue%20parrot/BLUE%20PARROT%20NORTH%20%26%20EAST%20ELEVATIONS.pdf",
+        "/drawings/blue%20parrot/BLUE%20PARROT%20SOUTH%20%26%20WEST%20ELEVATIONS.pdf",
+      ]),
     },
   },
 ]
@@ -154,7 +201,7 @@ export const renderings = [
   {
     id: 1,
     title: "Mulder Residence — Exterior",
-    software: "Revit",
+    software: "SKETCH-UP",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/MULDER%20RESIDENCE%20EXTERIOR.jpg",
@@ -162,7 +209,7 @@ export const renderings = [
   {
     id: 2,
     title: "Mulder Residence — Kitchen",
-    software: "Revit",
+    software: "SKETCH-UP",
     year: "2024",
     type: "INTERIOR",
     image: "/renders/MULDER%20RESIDENCE%20KITCHEN.jpg",
@@ -170,7 +217,7 @@ export const renderings = [
   {
     id: 3,
     title: "Red Lion — Exterior",
-    software: "Revit",
+    software: "SKETCH-UP",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/RED%20LION%20EXTERIOR.jpg",
@@ -178,7 +225,7 @@ export const renderings = [
   {
     id: 4,
     title: "Student Housing — Rear",
-    software: "Revit",
+    software: "SKETCH-UP",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/STUDENT%20HOUSING%20BACK.png",
@@ -186,7 +233,7 @@ export const renderings = [
   {
     id: 5,
     title: "Student Housing — Front",
-    software: "Revit",
+    software: "SKETCH-UP",
     year: "2024",
     type: "EXTERIOR",
     image: "/renders/STUDENT%20HOUSING%20FRONT.png",
@@ -194,7 +241,7 @@ export const renderings = [
   {
     id: 6,
     title: "Island — Site layout",
-    software: "Revit",
+    software: "SKETCH-UP",
     year: "2024",
     type: "SITE",
     image: "/renders/CHIDERAUZO%20ISLAND%20%28layout%29.jpg",

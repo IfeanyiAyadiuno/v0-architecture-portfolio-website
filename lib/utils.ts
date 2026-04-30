@@ -36,9 +36,16 @@ export function pdfIframeSrc(url: string, opts: PdfIframeOptions = {}): string {
   if (compactUi) {
     params.set('toolbar', '0')
     params.set('navpanes', '0')
+    // Chromium viewer understands these and removes internal scrollbars / chrome.
+    params.set('scrollbar', '0')
+    params.set('statusbar', '0')
+    params.set('messages', '0')
   } else {
     params.delete('toolbar')
     params.delete('navpanes')
+    params.delete('scrollbar')
+    params.delete('statusbar')
+    params.delete('messages')
   }
   const serialized = params.toString()
   return serialized ? `${base}#${serialized}` : `${base}#view=${view}`

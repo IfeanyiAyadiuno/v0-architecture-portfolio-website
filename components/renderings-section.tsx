@@ -177,12 +177,6 @@ export function RenderingsSection() {
                             decoding="async"
                           />
 
-                          <div className="absolute left-4 top-4 z-[15]">
-                            <span className="border border-white/50 bg-transparent px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-white">
-                              {rendering.type}
-                            </span>
-                          </div>
-
                           <div className="absolute inset-0 z-[15] flex items-end bg-black/60 p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
                             <p className="font-mono text-xs uppercase tracking-wide text-white">
                               {rendering.title} — {rendering.software} —{" "}

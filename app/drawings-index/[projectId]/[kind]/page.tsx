@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { useParams, useSearchParams } from "next/navigation"
+import dynamic from "next/dynamic"
 import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
 import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react"
@@ -13,14 +14,46 @@ import { PageTransition } from "@/components/page-transition"
 import { getDrawingProjectById, slugToKind } from "@/lib/data"
 import { cn, isPdfPath, pdfIframeSrc } from "@/lib/utils"
 
+const PdfSheetPreview = dynamic(
+  () => import("@/components/pdf-sheet-preview").then((m) => m.PdfSheetPreview),
+  {
+    ssr: false,
+    loading: () => <div className="absolute inset-0 bg-white" />,
+  }
+)
+
 /** Human-readable file name from a public URL (e.g. plans PDF path → "MAIN FLOOR PLAN.pdf"). */
 function sheetFileLabelFromUrl(src: string): string {
   const path = src.split("?")[0] ?? src
   const segment = path.split("/").pop() ?? path
+  const normalize = (name: string) => {
+    let out = name.replace(/\.pdf$/i, "")
+
+    // Canonicalize these two similarly-named sheets to one display title.
+    if (/WALL SECTIONS(?:\s+2)?/i.test(out)) {
+      out = out.replace(
+        /(AMBULANCE STATION\s+)?WALL SECTIONS(?:\s+2)?/i,
+        "AMBULANCE STATION WALL SECTIONS"
+      )
+    }
+
+    // Canonicalize these similarly-named sheets to one display title.
+    if (/BUILDING SECTION(S)?(?:\s+2)?/i.test(out)) {
+      out = out.replace(
+        /(AMBULANCE STATION\s+)?BUILDING SECTION(?:S)?(?:\s+2)?/i,
+        "AMBULANCE STATION BUILDING SECTIONS"
+      )
+    }
+
+    // Guard against accidental double-prefixing (e.g. "AMBULANCE STATION AMBULANCE STATION …").
+    out = out.replace(/^(AMBULANCE STATION\s+){2,}/i, "AMBULANCE STATION ")
+    return out
+  }
   try {
-    return decodeURIComponent(segment)
+    const decoded = decodeURIComponent(segment)
+    return normalize(decoded)
   } catch {
-    return segment
+    return normalize(segment)
   }
 }
 
@@ -127,18 +160,14 @@ function DrawingFigureMedia({
     }
   }, [immersiveFs, immersiveFallback])
 
-  const pdfSrc = useMemo(
-    () =>
-      isPdf
-        ? pdfIframeSrc(src, {
-            // Fit entire page in the viewer (width + height). FitH only fits width and
-            // clips tall sheets (e.g. stacked floor plans on 2nd/3rd floor PDFs).
-            view: "Fit",
-            compactUi: false,
-          })
-        : src,
-    [isPdf, src]
-  )
+  const pdfSrcFullscreen = useMemo(() => {
+    if (!isPdf) return src
+    return pdfIframeSrc(src, {
+      // Fullscreen can keep viewer controls for zoom / page navigation.
+      view: "Fit",
+      compactUi: false,
+    })
+  }, [isPdf, src])
 
   return (
     <div className="flex flex-col">
@@ -179,20 +208,20 @@ function DrawingFigureMedia({
         {isPdf ? (
           isFs ? (
             <iframe
-              key={pdfSrc}
+              key={pdfSrcFullscreen}
               title={fileLabel}
-              src={pdfSrc}
+              src={pdfSrcFullscreen}
               className="min-h-0 w-full flex-1 basis-0 border-0 bg-black"
             />
           ) : (
-            /* ~ANSI B / tabloid landscape (11×8.5) — matches many sheets so Chrome’s #view=Fit leaves little grey inside the iframe */
-            <div className="relative aspect-[11/8.5] w-full">
-              <iframe
-                key={pdfSrc}
-                title={fileLabel}
-                src={pdfSrc}
-                className="absolute inset-0 h-full w-full border-0 bg-black"
-              />
+            /* 1:100 style sheet preview (A1 landscape frame). No scrolling until fullscreen. */
+            <div className="relative aspect-[841/594] w-full overflow-hidden bg-[#e9e7e3]">
+              {/* “Desk” + paper frame (keep sheet light, like the original PDF) */}
+              <div className="absolute inset-3 border border-black/10 bg-[#f7f6f3] shadow-[0_14px_40px_rgba(0,0,0,0.18)] md:inset-4">
+                <div className="absolute inset-2 overflow-hidden bg-white md:inset-3">
+                  <PdfSheetPreview src={src} />
+                </div>
+              </div>
             </div>
           )
         ) : (
@@ -370,8 +399,8 @@ export default function ProjectDrawingKindPage() {
               </div>
 
               <header className="mb-12 border-b border-[#333333] pb-10">
-                <p className="font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA]">
-                  {project.category} — {kind}
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-white">
+                  [{String(kind).toUpperCase()}]
                 </p>
                 <h1 className="mt-3 font-[family-name:var(--font-space-grotesk)] text-3xl font-bold uppercase tracking-[0.05em] text-white md:text-4xl">
                   {project.title}
