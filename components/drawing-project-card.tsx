@@ -33,6 +33,12 @@ export function DrawingProjectCard({
 }: DrawingProjectCardProps) {
   const coverSrc = coverImageForProject(project)
   const pdfCover = isPdfPath(coverSrc)
+  const defaultRasterFit: "contain" | "cover" = coverSrc.startsWith(
+    "/covers/drawings/"
+  )
+    ? "cover"
+    : "contain"
+  const rasterFit = project.coverFit ?? defaultRasterFit
 
   const [measuredRatio, setMeasuredRatio] = useState<number | null>(null)
 
@@ -59,8 +65,14 @@ export function DrawingProjectCard({
 
   const shellClass = cn(indexSpanClass, className)
 
-  /** Home grid: fixed wide ratio so landscape covers (e.g. elevations) fit without harsh crop; pairs share row height. */
-  const coverBoxAspect = layout === "home" ? 2 : aspectRatio
+  /**
+   * Home grid:
+   * - default to a fixed wide ratio so landscape covers fit without harsh crop; pairs share row height.
+   * - if a project explicitly opts into `contain`, respect the image's own aspect ratio so we don't
+   *   letterbox it with empty side space (e.g. BLUE PARROT cover).
+   */
+  const coverBoxAspect =
+    layout === "home" ? (rasterFit === "contain" ? aspectRatio : 2) : aspectRatio
 
   const inner = (
     <>
@@ -78,6 +90,7 @@ export function DrawingProjectCard({
             src={coverSrc}
             alt={project.title}
             sizes={sizes}
+            fit={rasterFit}
             onRasterLoaded={pdfCover ? undefined : onRasterLoaded}
           />
           {showShine ? <FxCardShine /> : null}

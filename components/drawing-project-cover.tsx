@@ -7,6 +7,7 @@ type DrawingProjectCoverProps = {
   src: string
   alt: string
   sizes?: string
+  fit?: "contain" | "cover"
   /** Raster covers only: intrinsic pixels after decode (for aspect-aware layouts). */
   onRasterLoaded?: (dimensions: { width: number; height: number }) => void
 }
@@ -19,6 +20,7 @@ export function DrawingProjectCover({
   src,
   alt,
   sizes = "(max-width: 768px) 50vw, 25vw",
+  fit = "contain",
   onRasterLoaded,
 }: DrawingProjectCoverProps) {
   if (isPdfPath(src)) {
@@ -41,12 +43,12 @@ export function DrawingProjectCover({
       src={src}
       alt={alt}
       fill
-      className="object-contain opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+      className={`${fit === "cover" ? "object-cover" : "object-contain"} opacity-70 transition-opacity duration-300 group-hover:opacity-100`}
       sizes={sizes}
-      onLoadingComplete={(img) =>
+      onLoad={(e) =>
         onRasterLoaded?.({
-          width: img.naturalWidth,
-          height: img.naturalHeight,
+          width: (e.currentTarget as HTMLImageElement).naturalWidth,
+          height: (e.currentTarget as HTMLImageElement).naturalHeight,
         })
       }
     />
