@@ -71,6 +71,13 @@ export function Navigation() {
             <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
           </Link>
           <Link
+            href="/glazing-simulator"
+            className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
+          >
+            GLAZING SIMULATOR
+            <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
+          </Link>
+          <Link
             href="/#art"
             onClick={handleArtClick}
             className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"

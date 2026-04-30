@@ -2,7 +2,10 @@
 
 import { Suspense, useEffect, useState } from "react"
 import { motion } from "framer-motion"
+import { useReducedMotion } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { ArrowRight, ChevronDown } from "lucide-react"
 import {
   commercialProjects,
   getDrawingProjectById,
@@ -44,6 +47,7 @@ function DrawingGrid({
 function TechnicalDrawingsSectionInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const reduceMotion = useReducedMotion()
   const [selectedProject, setSelectedProject] = useState<DrawingProject | null>(
     null
   )
@@ -60,7 +64,7 @@ function TechnicalDrawingsSectionInner() {
   }, [searchParams, router])
 
   return (
-    <section id="drawings" className="scroll-mt-28 px-6 py-12 md:py-16">
+    <section id="drawings" className="relative scroll-mt-28 px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -70,7 +74,7 @@ function TechnicalDrawingsSectionInner() {
           className="mb-8 md:mb-10"
         >
           <h2 className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold uppercase tracking-[0.05em] text-white md:text-5xl lg:text-6xl">
-            Junior Technologist
+            Junior Architectural Technologist
           </h2>
           <p className="mt-4 font-sans text-lg text-[#AAAAAA]">
             Technical Drawings + Renderings
@@ -93,7 +97,58 @@ function TechnicalDrawingsSectionInner() {
           projects={commercialProjects}
           onSelect={setSelectedProject}
         />
+
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.4 }}
+          transition={{ delay: 0.2, duration: 0.45 }}
+          className="mt-8 border border-[#333333] bg-black/30 px-5 py-4 md:px-6 md:py-5"
+        >
+          <Link
+            href="/glazing-simulator"
+            className="group inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-white transition-colors hover:text-[#AAAAAA] md:text-sm"
+            data-clickable="true"
+          >
+            CHECK OUT MY GLAZING SIMULATOR
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Link>
+        </motion.div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
+        className="mt-10 flex justify-center md:mt-12"
+      >
+        <Link
+          href="/#renderings"
+          data-clickable="true"
+          className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+        >
+          <span className="sr-only">Scroll to renderings</span>
+          <span
+            aria-hidden
+            className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#AAAAAA] transition-colors group-hover:text-white/90"
+          >
+            Scroll
+          </span>
+          <motion.span
+            aria-hidden
+            className="flex flex-col items-center text-white/80 transition-colors group-hover:text-white"
+            animate={reduceMotion ? { y: 0 } : { y: [0, 6, 0] }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+            }
+          >
+            <ChevronDown className="h-6 w-6" strokeWidth={1.5} />
+          </motion.span>
+        </Link>
+      </motion.div>
 
       {selectedProject && (
         <DrawingModal

@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glazing Performance Simulator v4</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #141414; color: #e0e0e0;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+      padding: 0 16px 48px;
+    }
+    h1 { font-size: 17px; font-weight: 500; letter-spacing: 0.04em; color: #aaa; text-transform: uppercase; margin: 22px 0 14px; width: 100%; max-width: 960px; }
+
+    /* INTRO OVERLAY */
+    #intro {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.88);
+      display: flex; align-items: center; justify-content: center; z-index: 100;
+      padding: 24px;
+    }
+    .intro-box {
+      background: #1e1e1e; border: 1px solid #3a3a3a; border-radius: 16px;
+      padding: 32px 28px; max-width: 480px; width: 100%;
+    }
+    .intro-box h2 { font-size: 20px; font-weight: 500; color: #e0e0e0; margin-bottom: 10px; }
+    .intro-box p { font-size: 14px; color: #999; line-height: 1.7; margin-bottom: 12px; }
+    .intro-items { display: flex; flex-direction: column; gap: 10px; margin: 18px 0; }
+    .intro-item { display: flex; align-items: flex-start; gap: 12px; }
+    .intro-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .intro-item p { margin: 0; font-size: 13px; color: #bbb; line-height: 1.55; }
+    .intro-btn {
+      width: 100%; padding: 12px; background: #3a3a3a; border: none; border-radius: 8px;
+      color: #e0e0e0; font-size: 15px; cursor: pointer; transition: background 0.2s;
+    }
+    .intro-btn:hover { background: #4a4a4a; }
+
+    /* NARRATOR */
+    .narrator {
+      width: 100%; max-width: 720px; background: #1a1f2e; border: 1px solid #2a3050;
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
+      display: flex; align-items: flex-start; gap: 10px; min-height: 52px;
+    }
+    .narrator-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+    .narrator-text { font-size: 13px; color: #b0bcd0; line-height: 1.6; }
+
+    /* SCENARIOS */
+    .scenarios {
+      width: 100%; max-width: 720px; display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .scenario-btn {
+      flex: 1; min-width: 120px; padding: 8px 10px; background: #1e1e1e;
+      border: 1px solid #2e2e2e; border-radius: 8px; color: #999; font-size: 12px;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .scenario-btn:hover { border-color: #555; color: #ddd; }
+    .scenario-btn.active { border-color: #4488ff; color: #4488ff; background: #111a2a; }
+    .scenario-icon { font-size: 16px; display: block; margin-bottom: 3px; }
+
+    /* CONTROLS */
+    .controls {
+      background: #1e1e1e; border: 1px solid #2e2e2e; border-radius: 12px;
+      padding: 16px 20px; width: 100%; max-width: 720px; margin-bottom: 10px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .control-row { display: flex; align-items: center; gap: 14px; }
+    .control-row label { font-size: 13px; color: #888; width: 130px; flex-shrink: 0; }
+    select {
+      flex: 1; padding: 7px 10px; font-size: 13px; background: #2a2a2a; color: #e0e0e0;
+      border: 1px solid #3a3a3a; border-radius: 6px; cursor: pointer; outline: none;
+    }
+    select:hover, select:focus { border-color: #555; }
+    .slider-block { flex: 1; }
+    .slider-wrap { display: flex; align-items: center; gap: 10px; }
+    input[type="range"] {
+      flex: 1; -webkit-appearance: none; height: 4px; background: #3a3a3a;
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: #ddd; cursor: pointer; border: 2px solid #888;
+    }
+    .slider-val { font-size: 13px; font-weight: 500; color: #e0e0e0; min-width: 38px; text-align: right; }
+    .slider-ends { display: flex; justify-content: space-between; font-size: 10px; color: #555; margin-top: 3px; }
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; }
+    .li { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #777; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* MODE TOGGLE */
+    .mode-row { display: flex; align-items: center; gap: 10px; }
+    .mode-toggle {
+      display: flex; background: #2a2a2a; border-radius: 6px; overflow: hidden;
+      border: 1px solid #3a3a3a;
+    }
+    .mode-btn {
+      padding: 5px 14px; font-size: 12px; color: #888; background: transparent;
+      border: none; cursor: pointer; transition: all 0.2s;
+    }
+    .mode-btn.active { background: #3a3a3a; color: #e0e0e0; }
+
+    /* MAIN LAYOUT: canvas left, stats right */
+    .sim-layout {
+      width: 100%; max-width: 960px;
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .sim-left { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+    .sim-right {
+      width: 188px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;
+    }
+
+    /* CANVAS AREA */
+    .canvas-wrap { width: 100%; display: flex; gap: 6px; }
+    canvas {
+      border-radius: 10px; border: 1px solid #2e2e2e; display: block; background: #0d0d0d;
+    }
+    #simCanvas { flex: 1; }
+    #simCanvas2 { flex: 1; display: none; }
+    .canvas-label { font-size: 11px; color: #555; text-align: center; margin-top: 3px; }
+    .canvas-col { display: flex; flex-direction: column; flex: 1; }
+
+    /* COMFORT BAR */
+    .goal-bar-wrap {
+      width: 100%; background: #1e1e1e;
+      border: 1px solid #2e2e2e; border-radius: 10px; padding: 11px 16px;
+    }
+    .goal-label {
+      font-size: 12px; color: #777; margin-bottom: 7px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .goal-label-left { display: flex; align-items: center; gap: 6px; }
+    .goal-track { height: 10px; background: #2a2a2a; border-radius: 5px; position: relative; overflow: hidden; }
+    .goal-fill { height: 100%; border-radius: 5px; transition: width 0.4s ease, background 0.4s ease; }
+    .goal-marker { position: absolute; top: -2px; width: 2px; height: 14px; background: #22cc66; left: 24%; }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 20px; font-weight: 500; }
+    .badge-good { background: #0e3320; color: #22cc66; }
+    .badge-warn { background: #3a2900; color: #ef9f27; }
+    .badge-bad  { background: #3a0e0e; color: #e24b4a; }
+
+    /* SIDEBAR STATS — vertical stack of cards */
+    .stat {
+      background: #1e1e1e; border: 1px solid #2e2e2e; border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .stat-label { font-size: 10px; color: #666; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .stat-val { font-size: 22px; font-weight: 500; color: #e0e0e0; line-height: 1.1; }
+    .stat-sub { font-size: 11px; color: #666; margin-top: 3px; }
+
+    /* Split mode stats inside sidebar */
+    .split-stat-pair { display: flex; flex-direction: column; gap: 5px; }
+    .split-stat-col-label { font-size: 10px; font-weight: 500; padding: 0 1px; }
+    .split-stat-row { display: flex; gap: 5px; }
+    .split-half {
+      flex: 1; background: #1e1e1e; border: 1px solid #2e2e2e;
+      border-radius: 8px; padding: 7px 9px;
+    }
+    .split-half-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: 0.03em; }
+    .split-half-val { font-size: 16px; font-weight: 500; color: #e0e0e0; }
+    .split-half-sub { font-size: 10px; color: #555; margin-top: 1px; }
+
+    /* STAR RATING */
+    .stars { color: #ffaa00; font-size: 12px; letter-spacing: 1px; }
+
+    .reset-btn {
+      padding: 7px 0; width: 100%; background: transparent;
+      border: 1px solid #3a3a3a; border-radius: 6px; color: #888; font-size: 12px;
+      cursor: pointer; transition: border-color 0.2s, color 0.2s; text-align: center;
+    }
+    .reset-btn:hover { border-color: #666; color: #ccc; }
+
+    /* Controls and narrator still capped at 960px */
+    .narrator, .scenarios, .controls {
+      max-width: 960px;
+    }
+
+    @media (max-width: 680px) {
+      .sim-layout { flex-direction: column; }
+      .sim-right { width: 100%; flex-direction: row; flex-wrap: wrap; }
+      .sim-right .stat { flex: 1; min-width: 130px; }
+      .scenarios { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- INTRO OVERLAY -->
+<div id="intro">
+  <div class="intro-box">
+    <h2>How does window glazing work?</h2>
+    <p>Sunlight carries three types of energy toward your windows. This simulator shows what happens to each one depending on the type of glass.</p>
+    <div class="intro-items">
+      <div class="intro-item">
+        <div class="intro-dot" style="background:#9d00ff"></div>
+        <p><strong style="color:#c070ff">UV rays</strong> — invisible, but they fade your furniture, flooring, and artwork over time.</p>
+      </div>
+      <div class="intro-item">
+        <div class="intro-dot" style="background:#ffcc00"></div>
+        <p><strong style="color:#ffdd55">Visible light</strong> — the daylight you see and want inside your home.</p>
+      </div>
+      <div class="intro-item">
+        <div class="intro-dot" style="background:#ff4444"></div>
+        <p><strong style="color:#ff7766">Infrared (heat)</strong> — invisible heat energy. Too much makes your room uncomfortably hot.</p>
+      </div>
+      <div class="intro-item">
+        <div class="intro-dot" style="background:#4488ff"></div>
+        <p><strong style="color:#6699ff">Reflected rays</strong> — energy the glass bounces back outside, keeping your room cooler.</p>
+      </div>
+    </div>
+    <p>Watch the person and painting inside the room react as conditions change. Try different glazing types and scenarios to see the difference.</p>
+    <button class="intro-btn" onclick="document.getElementById('intro').style.display='none'">Start the simulation →</button>
+  </div>
+</div>
+
+<h1>Glazing Performance Simulator</h1>
+
+<!-- NARRATOR -->
+<div class="narrator">
+  <div class="narrator-icon">💬</div>
+  <div class="narrator-text" id="narratorText">Select a glazing type and scenario to begin. Watch what happens inside the room.</div>
+</div>
+
+<!-- SCENARIOS -->
+<div class="scenarios">
+  <button class="scenario-btn active" id="sc-custom" onclick="setScenario('custom')">
+    <span class="scenario-icon">🎛️</span>Custom
+  </button>
+  <button class="scenario-btn" id="sc-summer" onclick="setScenario('summer')">
+    <span class="scenario-icon">☀️</span>Hot summer day
+  </button>
+  <button class="scenario-btn" id="sc-winter" onclick="setScenario('winter')">
+    <span class="scenario-icon">❄️</span>Cold winter morning
+  </button>
+  <button class="scenario-btn" id="sc-overcast" onclick="setScenario('overcast')">
+    <span class="scenario-icon">🌧️</span>Overcast day
+  </button>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="control-row">
+    <label>Glazing type</label>
+    <select id="glassType">
+      <option value="single">Single-pane (pre-1970s)</option>
+      <option value="1981">1981 double-pane (uncoated)</option>
+      <option value="tinted">Tinted double-pane</option>
+      <option value="triple">Modern triple-pane (argon)</option>
+      <option value="lowe">Spectrally selective low-E</option>
+      <option value="vacuum">Vacuum glazing (VIG)</option>
+    </select>
+  </div>
+  <div class="control-row">
+    <label>Solar intensity</label>
+    <div class="slider-block">
+      <div class="slider-wrap">
+        <input type="range" id="intensity" min="1" max="10" value="4" step="1">
+        <span class="slider-val" id="intVal">4</span>
+      </div>
+      <div class="slider-ends"><span>overcast</span><span>peak summer sun</span></div>
+    </div>
+  </div>
+  <div class="control-row">
+    <label>Outdoor temp</label>
+    <div class="slider-block">
+      <div class="slider-wrap">
+        <input type="range" id="outdoorTemp" min="-20" max="45" value="28" step="1">
+        <span class="slider-val" id="outdoorVal">28°C</span>
+      </div>
+      <div class="slider-ends"><span>-20°C freezing</span><span>45°C extreme heat</span></div>
+    </div>
+  </div>
+  <div class="control-row">
+    <label>View mode</label>
+    <div class="mode-row">
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="modeSingle" onclick="setMode('single')">Single</button>
+        <button class="mode-btn" id="modeSplit" onclick="setMode('split')">Side by side</button>
+      </div>
+      <select id="glassType2" style="display:none;flex:1;margin-left:10px">
+        <option value="single">Single-pane (pre-1970s)</option>
+        <option value="1981">1981 double-pane</option>
+        <option value="tinted">Tinted double-pane</option>
+        <option value="triple">Triple-pane (argon)</option>
+        <option value="lowe" selected>Low-E</option>
+        <option value="vacuum">Vacuum glazing (VIG)</option>
+      </select>
+    </div>
+  </div>
+  <div class="control-row" style="padding-top:2px">
+    <label></label>
+    <div class="legend">
+      <div class="li"><div class="dot" style="background:#9d00ff"></div>UV — fades furniture</div>
+      <div class="li"><div class="dot" style="background:#ffcc00"></div>Visible — daylight</div>
+      <div class="li"><div class="dot" style="background:#ff4444"></div>Infrared — heat</div>
+      <div class="li"><div class="dot" style="background:#4488ff"></div>Reflected</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN SIM LAYOUT -->
+<div class="sim-layout">
+
+  <!-- LEFT: canvas + comfort bar -->
+  <div class="sim-left">
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="canvas-col">
+        <canvas id="simCanvas" height="400"></canvas>
+        <div class="canvas-label" id="label1"></div>
+      </div>
+      <div class="canvas-col" id="col2" style="display:none">
+        <canvas id="simCanvas2" height="400"></canvas>
+        <div class="canvas-label" id="label2"></div>
+      </div>
+    </div>
+
+    <!-- COMFORT BAR -->
+    <div class="goal-bar-wrap">
+      <div class="goal-label">
+        <div class="goal-label-left">
+          <span>Indoor comfort</span>
+          <span style="color:#22cc66;font-weight:500">≤ 26°C</span>
+          <span id="goalBadge" class="badge badge-good">comfortable</span>
+        </div>
+        <span id="goalTemp" style="font-weight:500;font-size:13px;color:#e0e0e0">20°C</span>
+      </div>
+      <div class="goal-track">
+        <div class="goal-fill" id="goalFill" style="width:0%;background:#22cc66"></div>
+        <div class="goal-marker"></div>
+      </div>
+    </div>
+
+  </div><!-- end sim-left -->
+
+  <!-- RIGHT: stats sidebar -->
+  <div class="sim-right" id="simRight">
+
+    <!-- SINGLE MODE stats (vertical stack) -->
+    <div id="statsSingle" style="display:flex;flex-direction:column;gap:8px;width:100%">
+      <div class="stat">
+        <div class="stat-label">Indoor temp</div>
+        <div class="stat-val" id="sTemp">—</div>
+        <div class="stat-sub" id="sTempSub"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">IR (heat) blocked</div>
+        <div class="stat-val" id="sIR">—</div>
+        <div class="stat-sub" id="sIRSub"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">UV blocked</div>
+        <div class="stat-val" id="sUV">—</div>
+        <div class="stat-sub" id="sUVSub"></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">U-value</div>
+        <div class="stat-val" id="sUval">—</div>
+        <div class="stat-sub" id="sStars"></div>
+      </div>
+    </div>
+
+    <!-- SPLIT MODE stats (pairs per metric) -->
+    <div id="statsSplit" style="display:none;flex-direction:column;gap:8px;width:100%">
+
+      <!-- Column headers -->
+      <div style="display:flex;gap:5px;padding:0 1px">
+        <div style="flex:1;font-size:10px;font-weight:500;color:#4488ff" id="splitLabel1">—</div>
+        <div style="flex:1;font-size:10px;font-weight:500;color:#ff8844" id="splitLabel2">—</div>
+      </div>
+
+      <!-- Indoor temp -->
+      <div>
+        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px">Indoor temp</div>
+        <div style="display:flex;gap:5px">
+          <div class="split-half">
+            <div class="split-half-val" id="s1Temp">—</div>
+            <div class="split-half-sub" id="s1TempSub"></div>
+          </div>
+          <div class="split-half">
+            <div class="split-half-val" id="s2Temp">—</div>
+            <div class="split-half-sub" id="s2TempSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IR blocked -->
+      <div>
+        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px">IR (heat) blocked</div>
+        <div style="display:flex;gap:5px">
+          <div class="split-half">
+            <div class="split-half-val" id="s1IR">—</div>
+            <div class="split-half-sub" id="s1IRSub"></div>
+          </div>
+          <div class="split-half">
+            <div class="split-half-val" id="s2IR">—</div>
+            <div class="split-half-sub" id="s2IRSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- UV blocked -->
+      <div>
+        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px">UV blocked</div>
+        <div style="display:flex;gap:5px">
+          <div class="split-half">
+            <div class="split-half-val" id="s1UV">—</div>
+            <div class="split-half-sub" id="s1UVSub"></div>
+          </div>
+          <div class="split-half">
+            <div class="split-half-val" id="s2UV">—</div>
+            <div class="split-half-sub" id="s2UVSub"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- U-value -->
+      <div>
+        <div style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:4px">U-value</div>
+        <div style="display:flex;gap:5px">
+          <div class="split-half">
+            <div class="split-half-val" id="s1Uval">—</div>
+            <div class="split-half-sub" id="s1Stars"></div>
+          </div>
+          <div class="split-half">
+            <div class="split-half-val" id="s2Uval">—</div>
+            <div class="split-half-sub" id="s2Stars"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end statsSplit -->
+
+    <button class="reset-btn" id="resetBtn">↺ Reset</button>
+
+  </div><!-- end sim-right -->
+
+</div><!-- end sim-layout -->
+
+<script>
+  // ── PHYSICS: U-value calculation (ISO 10292 / EN 673) ──
+  function calcUValue(config) {
+    const Rsi = 0.13, Rse = 0.04, Rpane = 0.004;
+    const sigma = 5.67e-8, Tm = 283;
+    function hRad(e1, e2) {
+      return 4 * sigma * Math.pow(Tm, 3) / (1/e1 + 1/e2 - 1);
+    }
+    function hConv(gas, width) {
+      const lambda = gas === 'argon' ? 0.0163 : 0.0244;
+      const Nu = gas === 'argon' ? 1.0 : Math.max(1.0, 0.035 * Math.pow(width * 1000, 0.38));
+      return Nu * lambda / width;
+    }
+    let R = Rsi + Rse + config.panes * Rpane;
+    for (const gap of config.gaps) {
+      if (gap.type === 'vacuum') { R += 0.30; }
+      else { R += 1 / (hConv(gap.gas, gap.width) + hRad(gap.e1, gap.e2)); }
+    }
+    return 1 / R;
+  }
+
+  const glassProps = {
+    single: { uv:0.95, vis:0.92, ir:0.92, label:'Single-pane', uValue: calcUValue({panes:1,gaps:[]}), stars:1 },
+    '1981': { uv:0.90, vis:0.90, ir:0.85, label:'1981 double-pane', uValue: calcUValue({panes:2,gaps:[{gas:'air',width:0.012,e1:0.84,e2:0.84}]}), stars:2 },
+    tinted: { uv:0.55, vis:0.55, ir:0.65, label:'Tinted double-pane', uValue: calcUValue({panes:2,gaps:[{gas:'air',width:0.012,e1:0.84,e2:0.84}]}), stars:2 },
+    triple: { uv:0.45, vis:0.78, ir:0.35, label:'Triple-pane argon', uValue: calcUValue({panes:3,gaps:[{gas:'argon',width:0.012,e1:0.84,e2:0.84},{gas:'argon',width:0.012,e1:0.84,e2:0.84}]}), stars:4 },
+    lowe:   { uv:0.04, vis:0.68, ir:0.08, label:'Low-E (argon)', uValue: calcUValue({panes:2,gaps:[{gas:'argon',width:0.016,e1:0.84,e2:0.04}]}), stars:4 },
+    vacuum: { uv:0.02, vis:0.70, ir:0.05, label:'Vacuum glazing', uValue: calcUValue({panes:2,gaps:[{type:'vacuum'}]}), stars:5 }
+  };
+
+  // ── NARRATOR MESSAGES ──
+  function getNarrator(setting, temp, irBlockPct, uvBlockPct, outdoor) {
+    const props = glassProps[setting];
+    if (setting === 'single') return `Single-pane glass lets in almost everything — ${Math.round((1-props.ir)*100)}% of heat is blocked but UV goes straight through, fading your furniture over time.`;
+    if (setting === '1981') return `Old double-pane glass is better than nothing but still lets in a lot of heat and UV. On a hot day your room will warm up quickly.`;
+    if (setting === 'tinted') return `Tinted glass cuts visible light and some heat, but the tinting itself absorbs heat and re-radiates it inward. Better than clear, not ideal.`;
+    if (setting === 'triple') return `Triple-pane glass with argon gas has excellent insulation — it slows heat transfer dramatically. Great for cold climates.`;
+    if (setting === 'lowe') {
+      if (temp > 27) return `Low-E glass is blocking ${Math.round(uvBlockPct)}% of UV and most infrared heat. Your furniture is well-protected and the room stays much cooler.`;
+      return `Low-E coating reflects infrared back outside while still letting daylight through. It works like a one-way thermal mirror.`;
+    }
+    if (setting === 'vacuum') return `Vacuum glazing has almost no gas between the panes — no gas means almost no heat transfer. The best insulation available, and nearly all UV is blocked.`;
+    if (temp > 29) return `The room is getting hot! The glass is letting too much infrared heat through. Consider upgrading to low-E or triple-pane.`;
+    if (temp <= 22) return `Room temperature is comfortable. The glazing is doing a good job keeping heat out.`;
+    return `Watch the coloured dots — red ones are heat rays. The more that bounce back outside, the cooler your room stays.`;
+  }
+
+  // ── SCENARIOS ──
+  const scenarios = {
+    summer:  { intensity: 9, outdoor: 35 },
+    winter:  { intensity: 3, outdoor: -5 },
+    overcast: { intensity: 2, outdoor: 14 },
+  };
+  let activeScenario = 'custom';
+
+  function setScenario(name) {
+    activeScenario = name;
+    document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('sc-' + name).classList.add('active');
+    if (name !== 'custom') {
+      const s = scenarios[name];
+      intensitySlider.value = s.intensity;
+      document.getElementById('intVal').textContent = s.intensity;
+      outdoorSlider.value = s.outdoor;
+      document.getElementById('outdoorVal').textContent = s.outdoor + '°C';
+      resetBoth();
+    }
+  }
+
+  // ── MODE ──
+  let splitMode = false;
+  function setMode(m) {
+    splitMode = m === 'split';
+    document.getElementById('modeSingle').classList.toggle('active', !splitMode);
+    document.getElementById('modeSplit').classList.toggle('active', splitMode);
+    document.getElementById('col2').style.display = splitMode ? 'flex' : 'none';
+    document.getElementById('simCanvas2').style.display = splitMode ? 'block' : 'none';
+    document.getElementById('glassType2').style.display = splitMode ? 'block' : 'none';
+    document.getElementById('statsSingle').style.display = splitMode ? 'none' : 'flex';
+    document.getElementById('statsSplit').style.display = splitMode ? 'flex' : 'none';
+    resizeCanvases();
+    resetBoth();
+  }
+
+  // ── CANVAS SETUP ──
+  const canvas1 = document.getElementById('simCanvas');
+  const canvas2 = document.getElementById('simCanvas2');
+  const ctx1 = canvas1.getContext('2d');
+  const ctx2 = canvas2.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const H = 400;
+
+  function resizeCanvases() {
+    [canvas1, canvas2].forEach(c => {
+      const rect = c.getBoundingClientRect();
+      if (rect.width === 0) return;
+      c.width = rect.width * dpr;
+      c.height = H * dpr;
+      const ct = c.getContext('2d');
+      ct.setTransform(dpr, 0, 0, dpr, 0, 0);
+    });
+  }
+  resizeCanvases();
+  window.addEventListener('resize', () => { resizeCanvases(); });
+
+  const glassSelect  = document.getElementById('glassType');
+  const glassSelect2 = document.getElementById('glassType2');
+  const intensitySlider = document.getElementById('intensity');
+  const outdoorSlider   = document.getElementById('outdoorTemp');
+
+  intensitySlider.addEventListener('input', () => {
+    document.getElementById('intVal').textContent = intensitySlider.value;
+    setScenario('custom');
+  });
+  outdoorSlider.addEventListener('input', () => {
+    document.getElementById('outdoorVal').textContent = outdoorSlider.value + '°C';
+    setScenario('custom');
+    resetBoth();
+  });
+  glassSelect.addEventListener('change', resetBoth);
+  glassSelect2.addEventListener('change', resetBoth);
+  document.getElementById('resetBtn').addEventListener('click', resetBoth);
+
+  // ── SIM STATE (two independent sims) ──
+  function makeSim() {
+    return {
+      particles: [], internalTemp: 20,
+      irBlocked: 0, irTotal: 0, uvBlocked: 0, uvTotal: 0, irPassed: 0,
+      glassFlash: 0, heatGlow: 0, uvAccum: 0,
+      uvHits: []  // [{x, y, age}] — flash impacts on the painting
+    };
+  }
+  let sim1 = makeSim(), sim2 = makeSim();
+
+  function getBaseTemp() {
+    return Math.max(16, Math.min(32, 18 + (parseInt(outdoorSlider.value) - 20) * 0.12));
+  }
+
+  function resetSim(sim) {
+    sim.internalTemp = getBaseTemp();
+    sim.irBlocked = 0; sim.irTotal = 0; sim.uvBlocked = 0; sim.uvTotal = 0;
+    sim.irPassed = 0; sim.glassFlash = 1.0; sim.heatGlow = 0; sim.uvAccum = 0;
+    sim.particles = [];
+  }
+
+  function resetBoth() { resetSim(sim1); resetSim(sim2); }
+
+  // ── PARTICLES ──
+  const colors = { uv: '#9d00ff', vis: '#ffcc00', ir: '#ff4444' };
+  function randomType() {
+    const r = Math.random();
+    if (r < 0.08) return 'uv';
+    if (r < 0.42) return 'vis';
+    return 'ir';
+  }
+
+  class Particle {
+    constructor(startX, canvasW) {
+      this.x = startX || 54;
+      this.y = Math.random() * (H - 80) + 40;
+      this.speed = Math.random() * 1.4 + 2.2;
+      this.type = randomType();
+      this.color = colors[this.type];
+      this.passedGlass = false; this.bounced = false; this.counted = false;
+      this.opacity = 0.9; this.r = 3.5; this.trail = [];
+      this.homingTarget = null; // {x, y} for UV particles to home toward
+    }
+    update(sim, setting, glassX, canvasW) {
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 7) this.trail.shift();
+      if (this.bounced) { this.x -= this.speed * 0.9; this.color = '#4488ff'; return; }
+
+      // UV homing: once past glass, curve toward painting position
+      if (this.passedGlass && this.type === 'uv' && this.homingTarget) {
+        const tx = this.homingTarget.x, ty = this.homingTarget.y;
+        const dy = ty - this.y;
+        this.y += dy * 0.06; // gentle curve
+        this.x += this.speed;
+        // Hit detection
+        if (Math.abs(this.x - tx) < 8 && Math.abs(this.y - ty) < 16) {
+          sim.uvHits.push({ x: tx + (Math.random() - 0.5) * 14, y: ty + (Math.random() - 0.5) * 10, age: 0 });
+          this.x = canvasW + 30; // remove
+        }
+        return;
+      }
+
+      this.x += this.speed;
+      if (this.x >= glassX - 7 && !this.passedGlass && !this.bounced) {
+        if (!this.counted) {
+          this.counted = true;
+          if (this.type === 'ir') sim.irTotal++;
+          if (this.type === 'uv') sim.uvTotal++;
+        }
+        const passChance = glassProps[setting][this.type];
+        if (Math.random() > passChance) {
+          this.bounced = true;
+          sim.glassFlash = Math.min(1.0, sim.glassFlash + 0.25);
+          if (this.type === 'ir') sim.irBlocked++;
+          if (this.type === 'uv') sim.uvBlocked++;
+        } else {
+          this.passedGlass = true;
+          if (this.type === 'ir') { sim.internalTemp += 0.055; sim.irPassed++; sim.heatGlow = Math.min(1, sim.heatGlow + 0.012); }
+          if (this.type === 'uv') {
+            sim.uvAccum = Math.min(1, sim.uvAccum + 0.002);
+            // Set homing target toward painting (calculated in drawFrame, stored on sim)
+            this.homingTarget = sim.paintingPos || null;
+          }
+        }
+      }
+    }
+    draw(ctx) {
+      for (let i = 0; i < this.trail.length; i++) {
+        const t = this.trail[i];
+        ctx.beginPath(); ctx.arc(t.x, t.y, this.r * 0.55, 0, Math.PI * 2);
+        ctx.fillStyle = this.color; ctx.globalAlpha = (i / this.trail.length) * 0.28; ctx.fill();
+      }
+      ctx.globalAlpha = this.opacity;
+      ctx.beginPath(); ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.color; ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ── DRAW FUNCTIONS ──
+  function drawSun(ctx, intensity, w) {
+    const pulse = 0.85 + 0.15 * Math.sin(Date.now() * 0.003 * (intensity / 5));
+    const cx = 28, cy = H / 2, radius = 14 * pulse;
+    ctx.fillStyle = intensity > 6 ? '#ff8800' : '#ffaa00';
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2, len = 5 + intensity * 1.3;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(angle) * (radius + 2), cy + Math.sin(angle) * (radius + 2));
+      ctx.lineTo(cx + Math.cos(angle) * (radius + 2 + len), cy + Math.sin(angle) * (radius + 2 + len));
+      ctx.strokeStyle = intensity > 6 ? '#ff8800' : '#ffaa00';
+      ctx.lineWidth = 2 * pulse; ctx.stroke();
+    }
+  }
+
+  function drawGlass(ctx, glassX, setting, sim) {
+    const panes = setting === 'single' ? 1 : setting === 'triple' ? 3 : 2;
+    const paneGap = 5, paneW = 7;
+    const totalW = panes * paneW + (panes - 1) * paneGap;
+    const startX = glassX - totalW / 2;
+    for (let i = 0; i < panes; i++) {
+      const px = startX + i * (paneW + paneGap);
+      const fa = 0.12 + sim.glassFlash * 0.5;
+      const r = setting === 'tinted' ? 100 : 120;
+      const g = setting === 'tinted' ? 160 : 200;
+      const b = setting === 'tinted' ? 80 : 240;
+      ctx.fillStyle = `rgba(${r},${g},${b},${fa})`;
+      ctx.fillRect(px, 0, paneW, H);
+      ctx.strokeStyle = `rgba(160,220,255,${0.3 + sim.glassFlash * 0.5})`;
+      ctx.lineWidth = 1; ctx.strokeRect(px, 0, paneW, H);
+      if (setting === 'vacuum' && i === 0) {
+        ctx.fillStyle = 'rgba(10,20,40,0.8)'; ctx.fillRect(px + paneW, 0, paneGap, H);
+      }
+    }
+    if (sim.glassFlash > 0) sim.glassFlash = Math.max(0, sim.glassFlash - 0.035);
+    ctx.fillStyle = 'rgba(140,190,210,0.45)'; ctx.font = '10px sans-serif';
+    ctx.fillText('glass', glassX - 12, H - 7);
+  }
+
+  function drawHeatGlow(ctx, glassX, w, sim) {
+    if (sim.heatGlow <= 0) return;
+    const alpha = sim.heatGlow * 0.28;
+    const grad = ctx.createLinearGradient(glassX + 7, 0, w, 0);
+    grad.addColorStop(0, `rgba(255,80,20,${alpha})`);
+    grad.addColorStop(0.35, `rgba(255,60,10,${alpha * 0.5})`);
+    grad.addColorStop(1, `rgba(255,40,0,0)`);
+    ctx.fillStyle = grad; ctx.fillRect(glassX + 7, 0, w - glassX - 7, H);
+    const t = Date.now() * 0.0007;
+    for (let i = 0; i < 4; i++) {
+      const ly = 60 + i * 75 + Math.sin(t + i * 1.3) * 15;
+      ctx.strokeStyle = `rgba(255,120,30,${sim.heatGlow * 0.07})`;
+      ctx.lineWidth = 1.5; ctx.beginPath();
+      ctx.moveTo(glassX + 12, ly); ctx.lineTo(w - 55, ly + Math.sin(t * 0.8 + i) * 5);
+      ctx.stroke();
+    }
+  }
+
+  function drawThermometer(ctx, temp, w) {
+    const thX = w - 32, thTop = 52, thH = H - 100;
+    ctx.fillStyle = 'rgba(80,80,80,0.22)';
+    ctx.beginPath(); ctx.roundRect(thX, thTop, 12, thH, 6); ctx.fill();
+    const pct = Math.min(1, (temp - 16) / 29), fillH = Math.max(0, pct * thH);
+    const r = Math.round(pct * 255), bl = Math.round(220 - pct * 220);
+    ctx.fillStyle = `rgb(${r},60,${bl})`;
+    if (fillH > 0) { ctx.beginPath(); ctx.roundRect(thX, thTop + thH - fillH, 12, fillH, 4); ctx.fill(); }
+    const dangerPct = (26 - 16) / 29, dangerY = thTop + thH - dangerPct * thH;
+    ctx.strokeStyle = '#22cc66'; ctx.lineWidth = 1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(thX - 5, dangerY); ctx.lineTo(thX + 17, dangerY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#22cc66'; ctx.font = '9px sans-serif'; ctx.fillText('26°', thX - 14, dangerY + 3);
+    ctx.fillStyle = '#aaa'; ctx.font = '11px sans-serif';
+    ctx.fillText(Math.round(temp) + '°C', thX - 2, thTop - 8);
+  }
+
+  // ── PERSON SILHOUETTE ──
+  function drawPerson(ctx, temp, glassX, w) {
+    const px = glassX + (w - glassX) * 0.45;
+    const py = H - 55;
+    const hot = temp > 29, warn = temp > 26;
+    const bodyColor = hot ? '#cc4422' : warn ? '#cc8822' : '#448844';
+
+    // Body
+    ctx.fillStyle = bodyColor;
+    // Head
+    ctx.beginPath(); ctx.arc(px, py - 38, 10, 0, Math.PI * 2); ctx.fill();
+    // Torso
+    ctx.fillRect(px - 8, py - 28, 16, 22);
+    // Legs
+    ctx.fillRect(px - 7, py - 6, 6, 18);
+    ctx.fillRect(px + 1, py - 6, 6, 18);
+    // Arms — raise if hot
+    if (hot) {
+      ctx.beginPath(); ctx.moveTo(px - 8, py - 22); ctx.lineTo(px - 18, py - 32); ctx.strokeStyle = bodyColor; ctx.lineWidth = 4; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px + 8, py - 22); ctx.lineTo(px + 18, py - 32); ctx.strokeStyle = bodyColor; ctx.lineWidth = 4; ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(px - 8, py - 22); ctx.lineTo(px - 16, py - 12); ctx.strokeStyle = bodyColor; ctx.lineWidth = 4; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px + 8, py - 22); ctx.lineTo(px + 16, py - 12); ctx.strokeStyle = bodyColor; ctx.lineWidth = 4; ctx.stroke();
+    }
+
+    // Face expression
+    ctx.fillStyle = '#141414';
+    // Eyes
+    ctx.beginPath(); ctx.arc(px - 3.5, py - 40, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + 3.5, py - 40, 1.5, 0, Math.PI * 2); ctx.fill();
+    // Mouth
+    ctx.beginPath(); ctx.strokeStyle = '#141414'; ctx.lineWidth = 1.5;
+    if (hot) {
+      // open distressed mouth
+      ctx.arc(px, py - 36, 3.5, 0, Math.PI);
+    } else if (warn) {
+      // flat line
+      ctx.moveTo(px - 3, py - 36); ctx.lineTo(px + 3, py - 36);
+    } else {
+      // smile
+      ctx.arc(px, py - 38, 3.5, 0.2, Math.PI - 0.2);
+    }
+    ctx.stroke();
+
+    // Sweat drops if very hot
+    if (hot) {
+      ctx.fillStyle = '#4488ff';
+      ctx.beginPath(); ctx.ellipse(px + 13, py - 42, 2, 3, 0.3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(px - 14, py - 38, 1.5, 2.5, -0.3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Label
+    ctx.fillStyle = hot ? '#cc4422' : warn ? '#cc8822' : '#448844';
+    ctx.font = '10px sans-serif';
+    ctx.fillText(hot ? 'too hot!' : warn ? 'warm' : 'comfortable', px - (hot ? 18 : warn ? 14 : 24), py + 18);
+  }
+
+  // ── PAINTING ──
+  function drawPainting(ctx, sim, glassX, w) {
+    const px = glassX + (w - glassX) * 0.78;
+    const py = 60;
+    const pw = 32, ph = 26;
+    const uvAccum = sim.uvAccum;
+
+    // Store painting position on sim so particles can home in
+    sim.paintingPos = { x: px, y: py + ph / 2 };
+
+    // Frame
+    ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 3;
+    ctx.strokeRect(px - pw/2 - 2, py - 2, pw + 4, ph + 4);
+
+    // Canvas bg — fades from rich colour to washed out
+    const fade = uvAccum;
+    const r = Math.round(180 - fade * 120);
+    const g = Math.round(80 + fade * 60);
+    const b = Math.round(60 + fade * 80);
+    ctx.fillStyle = `rgb(${r},${g},${b})`;
+    ctx.fillRect(px - pw/2, py, pw, ph);
+
+    // Simple painting shapes — also fade
+    const shapeAlpha = 1 - fade * 0.75;
+    ctx.globalAlpha = shapeAlpha;
+    ctx.fillStyle = `rgb(${Math.round(80 - fade*60)},${Math.round(140 - fade*90)},${Math.round(200 - fade*140)})`;
+    ctx.beginPath(); ctx.arc(px, py + 8, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgb(${Math.round(220 - fade*160)},${Math.round(180 - fade*120)},${Math.round(60 - fade*40)})`;
+    ctx.fillRect(px - 12, py + 14, 10, 8);
+    ctx.globalAlpha = 1;
+
+    // UV hit flashes — small purple starbursts
+    sim.uvHits = sim.uvHits.filter(h => h.age < 18);
+    for (const hit of sim.uvHits) {
+      const progress = hit.age / 18;
+      const alpha = (1 - progress) * 0.9;
+      const radius = 3 + progress * 9;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#cc44ff';
+      ctx.beginPath(); ctx.arc(hit.x, hit.y, radius, 0, Math.PI * 2); ctx.fill();
+      // Small radiating lines
+      ctx.strokeStyle = '#dd88ff';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const len = radius * 1.4;
+        ctx.beginPath();
+        ctx.moveTo(hit.x + Math.cos(angle) * radius * 0.5, hit.y + Math.sin(angle) * radius * 0.5);
+        ctx.lineTo(hit.x + Math.cos(angle) * len, hit.y + Math.sin(angle) * len);
+        ctx.stroke();
+      }
+      hit.age++;
+    }
+    ctx.globalAlpha = 1;
+
+    // Label
+    ctx.fillStyle = '#555'; ctx.font = '9px sans-serif';
+    ctx.fillText('artwork', px - 12, py + ph + 13);
+
+    // UV warning
+    if (fade > 0.3) {
+      ctx.fillStyle = '#9d00ff';
+      ctx.font = '9px sans-serif';
+      ctx.fillText('fading!', px - 11, py - 7);
+    }
+  }
+
+  function drawLabels(ctx, glassX, setting) {
+    ctx.fillStyle = 'rgba(120,120,120,0.55)'; ctx.font = '12px sans-serif';
+    ctx.fillText('OUTSIDE', 54, 18);
+    ctx.fillText('INSIDE', glassX + 18, 18);
+    // Glass type label
+    ctx.fillStyle = 'rgba(100,160,200,0.5)'; ctx.font = '10px sans-serif';
+    ctx.fillText(glassProps[setting].label, glassX - 14, 30);
+  }
+
+  function drawOutdoorTemp(ctx, temp) {
+    ctx.fillStyle = temp > 30 ? '#ff8844' : temp < 5 ? '#88bbff' : '#777';
+    ctx.font = '10px sans-serif';
+    ctx.fillText('out: ' + temp + '°C', 54, H - 8);
+  }
+
+  // ── UPDATE UI ──
+  let narratorTimer = 0;
+
+  function fillStats(prefix, sim, setting) {
+    const temp = sim.internalTemp;
+    const irPct = sim.irTotal > 0 ? Math.round(sim.irBlocked / sim.irTotal * 100) : null;
+    const uvPct = sim.uvTotal > 0 ? Math.round(sim.uvBlocked / sim.uvTotal * 100) : null;
+    const uv = glassProps[setting].uValue;
+    const stars = glassProps[setting].stars;
+    const tempDiff = Math.round(temp - getBaseTemp());
+
+    document.getElementById(prefix + 'Temp').textContent = Math.round(temp) + '°C';
+    document.getElementById(prefix + 'TempSub').textContent = tempDiff > 0 ? '+' + tempDiff + '° above base' : 'at base temp';
+    document.getElementById(prefix + 'IR').textContent = irPct !== null ? irPct + '%' : '—';
+    document.getElementById(prefix + 'IRSub').textContent = irPct !== null ? (irPct > 70 ? 'good protection' : irPct > 40 ? 'partial' : 'poor') : '';
+    document.getElementById(prefix + 'UV').textContent = uvPct !== null ? uvPct + '%' : '—';
+    document.getElementById(prefix + 'UVSub').textContent = uvPct !== null ? (uvPct > 90 ? 'furniture safe' : uvPct > 60 ? 'some risk' : 'high risk') : '';
+    document.getElementById(prefix + 'Uval').textContent = uv.toFixed(2) + ' W/m²K';
+    document.getElementById(prefix + 'Stars').innerHTML = '<span class="stars">' + '★'.repeat(stars) + '<span style="color:#333">' + '★'.repeat(5 - stars) + '</span></span>';
+  }
+
+  function updateUI(sim, setting) {
+    // Always fill single-mode stats from sim1
+    fillStats('s', sim, setting);
+
+    // Fill split-mode stats if active
+    if (splitMode) {
+      const s2 = glassSelect2.value;
+      document.getElementById('splitLabel1').textContent = glassProps[glassSelect.value].label;
+      document.getElementById('splitLabel2').textContent = glassProps[s2].label;
+      fillStats('s1', sim1, glassSelect.value);
+      fillStats('s2', sim2, s2);
+    }
+
+    // Comfort bar (always driven by sim1)
+    const temp = sim.internalTemp;
+    const pct = Math.min(100, ((temp - 16) / 29) * 100);
+    const fill = document.getElementById('goalFill');
+    fill.style.width = pct + '%';
+    const comfortable = temp <= 26, hot = temp > 30;
+    fill.style.background = comfortable ? '#22cc66' : hot ? '#e24b4a' : '#ef9f27';
+    const badge = document.getElementById('goalBadge');
+    badge.textContent = comfortable ? 'comfortable' : hot ? 'too hot!' : 'warming up';
+    badge.className = 'badge ' + (comfortable ? 'badge-good' : hot ? 'badge-bad' : 'badge-warn');
+    document.getElementById('goalTemp').textContent = Math.round(temp) + '°C';
+
+    // Narrator (throttled)
+    narratorTimer++;
+    if (narratorTimer % 90 === 0) {
+      const irPct = sim.irTotal > 0 ? Math.round(sim.irBlocked / sim.irTotal * 100) : 0;
+      const uvPct = sim.uvTotal > 0 ? Math.round(sim.uvBlocked / sim.uvTotal * 100) : 0;
+      document.getElementById('narratorText').textContent =
+        getNarrator(setting, temp, irPct, uvPct, parseInt(outdoorSlider.value));
+    }
+  }
+
+  function updateCanvasLabels() {
+    document.getElementById('label1').textContent = splitMode ? glassProps[glassSelect.value].label : '';
+    document.getElementById('label2').textContent = splitMode ? glassProps[glassSelect2.value].label : '';
+  }
+
+  // ── DRAW ONE FRAME ──
+  function drawFrame(ctx, sim, setting, canvasEl) {
+    const w = canvasEl.getBoundingClientRect().width;
+    if (w === 0) return;
+    ctx.clearRect(0, 0, w, H);
+    const glassX = Math.round(w * 0.47);
+    const intensity = parseInt(intensitySlider.value);
+    const outdoor = parseInt(outdoorSlider.value);
+
+    drawLabels(ctx, glassX, setting);
+    drawSun(ctx, intensity, w);
+    drawHeatGlow(ctx, glassX, w, sim);
+    drawGlass(ctx, glassX, setting, sim);
+    drawPainting(ctx, sim, glassX, w);
+    drawPerson(ctx, sim.internalTemp, glassX, w);
+    drawThermometer(ctx, sim.internalTemp, w);
+    drawOutdoorTemp(ctx, outdoor);
+
+    // Temp physics
+    const uValue = glassProps[setting].uValue;
+    const baseTemp = getBaseTemp();
+    const decayRate = 0.008 + (uValue / 5.8) * 0.018;
+    sim.internalTemp += (baseTemp - sim.internalTemp) * decayRate;
+    sim.internalTemp = Math.max(baseTemp - 1, sim.internalTemp);
+    sim.heatGlow = Math.max(0, sim.heatGlow - 0.003);
+
+    // Spawn particles
+    const spawnRate = 0.07 * intensity;
+    if (Math.random() < spawnRate) sim.particles.push(new Particle(54, w));
+    if (intensity > 5 && Math.random() < spawnRate * 0.6) sim.particles.push(new Particle(54, w));
+    if (intensity > 8 && Math.random() < spawnRate * 0.4) sim.particles.push(new Particle(54, w));
+
+    sim.particles.forEach(p => { p.update(sim, setting, glassX, w); p.draw(ctx); });
+    sim.particles = sim.particles.filter(p => p.x < w + 20 && p.x > -20);
+  }
+
+  // ── MAIN LOOP ──
+  function animate() {
+    const s1 = glassSelect.value;
+    drawFrame(ctx1, sim1, s1, canvas1);
+    if (splitMode) drawFrame(ctx2, sim2, glassSelect2.value, canvas2);
+    updateUI(sim1, s1);
+    updateCanvasLabels();
+    requestAnimationFrame(animate);
+  }
+
+  resetBoth();
+  animate();
+</script>
+</body>
+</html>
+

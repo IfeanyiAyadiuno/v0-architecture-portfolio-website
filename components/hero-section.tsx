@@ -3,6 +3,7 @@
 import { motion, useReducedMotion, type Variants } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { ShootingStars } from "./shooting-stars"
 
 const letterVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -38,12 +39,18 @@ function AnimatedText({ text, className }: { text: string; className?: string })
 
 export function HeroSection() {
   const reduceMotion = useReducedMotion()
-  const line1 = "JUNIOR TECHNOLOGIST + ARTIST"
+  const line1 = "JUNIOR ARCHITECTURAL TECHNOLOGIST + ARTIST"
   const line2 = "[CHIDERA UZO]"
   const line3 = "Based in [Edmonton] — Available 2025"
 
   return (
     <section className="relative isolate z-10 flex h-screen flex-col items-center justify-center px-6">
+      <ShootingStars
+        className="pointer-events-none absolute inset-0 z-0 opacity-80"
+        meanIntervalMs={5000}
+        intensity={0.7}
+        maxStars={3}
+      />
       <motion.div
         className="pointer-events-none absolute inset-0 flex items-center justify-center"
         aria-hidden

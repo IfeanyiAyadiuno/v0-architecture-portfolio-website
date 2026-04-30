@@ -4,8 +4,8 @@ import { isPdfPath } from "@/lib/utils"
 
 export const DRAWING_KINDS = [
   "Plans",
-  "Sections",
   "Elevations",
+  "Sections",
   "Details",
   "Schedules",
 ] as const
@@ -92,8 +92,6 @@ export const commercialProjects: DrawingProject[] = [
       Sections: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20BUILDING%20SECTION.pdf",
         "/drawings/ambulance-station/AMBULANCE%20STATION%20BUILDING%20SECTIONS%202.pdf",
-        "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS.pdf",
-        "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS%202.pdf",
         "/drawings/ambulance-station/AMBULANCE%20STATION%20NORTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
         "/drawings/ambulance-station/AMBULANCE%20STATION%20SOUTH%20STAIRS%20PLANS%20%26%20SECTION.pdf",
       ]),
@@ -103,6 +101,8 @@ export const commercialProjects: DrawingProject[] = [
       ]),
       Details: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20PLAN%20%26%20SECTION%20DETAILS.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS.pdf",
+        "/drawings/ambulance-station/AMBULANCE%20STATION%20WALL%20SECTIONS%202.pdf",
       ]),
       Schedules: sheet("1:100", "Revit", [
         "/drawings/ambulance-station/AMBULANCE%20STATION%20LIFE%20SAFETY%20PLAN.pdf",

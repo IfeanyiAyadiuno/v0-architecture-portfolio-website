@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
 import Link from "next/link"
 import { renderings } from "@/lib/data"
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { RenderingLightbox } from "./rendering-lightbox"
 
 const SLIDE_GAP_PX = 20
@@ -99,7 +99,7 @@ export function RenderingsSection() {
   }, [])
 
   return (
-    <section className="overflow-hidden px-6 py-12 md:py-16">
+    <section id="renderings" className="overflow-hidden px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -222,6 +222,40 @@ export function RenderingsSection() {
             >
               View all renderings
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+            className="mt-10 flex justify-center md:mt-12"
+          >
+            <Link
+              href="/#art"
+              data-clickable="true"
+              className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            >
+              <span className="sr-only">Scroll to artist work</span>
+              <span
+                aria-hidden
+                className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#AAAAAA] transition-colors group-hover:text-white/90"
+              >
+                Scroll
+              </span>
+              <motion.span
+                aria-hidden
+                className="flex flex-col items-center text-white/80 transition-colors group-hover:text-white"
+                animate={reducedMotion ? { y: 0 } : { y: [0, 6, 0] }}
+                transition={
+                  reducedMotion
+                    ? { duration: 0 }
+                    : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                }
+              >
+                <ChevronDown className="h-6 w-6" strokeWidth={1.5} />
+              </motion.span>
             </Link>
           </motion.div>
         </div>
