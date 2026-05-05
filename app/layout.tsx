@@ -19,7 +19,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Portfolio — Junior Architectural Technologist + Artist',
+  title: 'Portfolio — Architectural Technologist + Artist',
   description: 'Architecture portfolio showcasing technical drawings, renderings, and artistic work',
 }
 

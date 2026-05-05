@@ -74,7 +74,7 @@ function TechnicalDrawingsSectionInner() {
           className="mb-8 md:mb-10"
         >
           <h2 className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold uppercase tracking-[0.05em] text-white md:text-5xl lg:text-6xl">
-            Junior Architectural Technologist
+            Architectural Technologist
           </h2>
           <p className="mt-4 font-sans text-lg text-[#AAAAAA]">
             Technical Drawings + Renderings

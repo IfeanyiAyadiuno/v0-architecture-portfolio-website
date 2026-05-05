@@ -39,7 +39,7 @@ function AnimatedText({ text, className }: { text: string; className?: string })
 
 export function HeroSection() {
   const reduceMotion = useReducedMotion()
-  const line1 = "JUNIOR ARCHITECTURAL TECHNOLOGIST + ARTIST"
+  const line1 = "ARCHITECTURAL TECHNOLOGIST + ARTIST"
   const line2 = "[CHIDERA UZO]"
   const line3 = "Based in [Edmonton] — Available 2025"
 
