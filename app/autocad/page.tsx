@@ -64,14 +64,7 @@ export default function AutoCADPage() {
               <h1 className="font-[family-name:var(--font-space-grotesk)] text-3xl font-bold uppercase tracking-[0.05em] text-white md:text-4xl">
                 AutoCAD
               </h1>
-              <p className="mt-4 max-w-2xl font-sans text-lg text-[#AAAAAA]">
-                Coloured covers from{" "}
-                <span className="text-white">CAD FILES/coloured</span> — black
-                &amp; white sheets from{" "}
-                <span className="text-white">CAD FILES/black &amp; white</span>
-              </p>
-
-              <div className="mt-8 flex justify-end">
+              <div className="mt-6 flex justify-end">
                 <div className="relative">
                   <button
                     type="button"
@@ -122,18 +115,15 @@ export default function AutoCADPage() {
                 Loading drawings…
               </p>
             ) : sortedFiles.length > 0 ? (
-              <motion.div
-                layout
-                className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
-              >
+              <motion.div layout className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
                 <AnimatePresence mode="popLayout">
                   {sortedFiles.map((file, index) => (
                     <motion.div
                       key={file.id}
                       layout
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.98 }}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 12 }}
                       transition={{ duration: 0.25 }}
                     >
                       <AutoCADFileCard

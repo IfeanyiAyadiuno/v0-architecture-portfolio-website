@@ -22,8 +22,8 @@ export default function HomePage() {
           <div className="relative z-10">
             <HeroSection />
             <TechnicalDrawingsSection />
-            <RenderingsSection />
             <AutoCADSection />
+            <RenderingsSection />
             <ArtistSection />
             <Footer />
           </div>

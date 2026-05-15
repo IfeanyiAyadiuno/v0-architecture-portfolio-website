@@ -233,11 +233,11 @@ export function RenderingsSection() {
             className="mt-10 flex justify-center md:mt-12"
           >
             <Link
-              href="/#autocad"
+              href="/#art"
               data-clickable="true"
               className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
             >
-              <span className="sr-only">Scroll to AutoCAD work</span>
+              <span className="sr-only">Scroll to artist work</span>
               <span
                 aria-hidden
                 className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#AAAAAA] transition-colors group-hover:text-white/90"

@@ -7,19 +7,31 @@ import { cn } from "@/lib/utils"
 type PdfSheetPreviewProps = {
   src: string
   className?: string
+  /** `width` fills container width (may crop tall sheets). `contain` scales to show the full page. */
+  fit?: "width" | "contain"
+  /** Fired when page 1 dimensions are known (for aspect-aware card frames). */
+  onPageDimensions?: (size: { width: number; height: number }) => void
 }
 
 // Configure worker for `react-pdf` / pdf.js
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const workerSrc = (pdfjs as any)?.GlobalWorkerOptions?.workerSrc
 
-export function PdfSheetPreview({ src, className }: PdfSheetPreviewProps) {
+export function PdfSheetPreview({
+  src,
+  className,
+  fit = "width",
+  onPageDimensions,
+}: PdfSheetPreviewProps) {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null)
-  const [width, setWidth] = useState<number>(0)
+  const [containerWidth, setContainerWidth] = useState(0)
+  const [containerHeight, setContainerHeight] = useState(0)
+  const [pageSize, setPageSize] = useState<{ width: number; height: number } | null>(
+    null
+  )
   const [loadFailed, setLoadFailed] = useState(false)
 
   const worker = useMemo(() => {
-    // Prefer CDN worker to avoid Next bundling edge-cases.
     const version =
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ((pdfjs as any)?.version as string | undefined) ?? "4.0.0"
@@ -33,11 +45,17 @@ export function PdfSheetPreview({ src, className }: PdfSheetPreviewProps) {
   }, [worker])
 
   useEffect(() => {
+    setPageSize(null)
+    setLoadFailed(false)
+  }, [src])
+
+  useEffect(() => {
     if (!containerEl) return
 
     const ro = new ResizeObserver((entries) => {
-      const next = entries[0]?.contentRect?.width ?? 0
-      setWidth(Math.max(0, Math.floor(next)))
+      const rect = entries[0]?.contentRect
+      setContainerWidth(Math.max(0, Math.floor(rect?.width ?? 0)))
+      setContainerHeight(Math.max(0, Math.floor(rect?.height ?? 0)))
     })
     ro.observe(containerEl)
     return () => ro.disconnect()
@@ -46,35 +64,51 @@ export function PdfSheetPreview({ src, className }: PdfSheetPreviewProps) {
   const fileUrl = useMemo(() => {
     if (typeof window === "undefined") return src
     if (src.startsWith("http://") || src.startsWith("https://")) return src
-    // pdf.js fetch behaves more reliably with absolute same-origin URLs in dev.
     return new URL(src, window.location.origin).toString()
   }, [src])
+
+  const renderWidth = useMemo(() => {
+    const cw = Math.max(1, containerWidth)
+    const ch = Math.max(1, containerHeight)
+
+    if (fit === "width" || !pageSize) {
+      return cw
+    }
+
+    const scale = Math.min(cw / pageSize.width, ch / pageSize.height)
+    return Math.max(1, Math.floor(pageSize.width * scale))
+  }, [fit, containerWidth, containerHeight, pageSize])
 
   return (
     <div
       ref={setContainerEl}
-      className={cn("absolute inset-0 grid place-items-center", className)}
+      className={cn("absolute inset-0 grid place-items-center overflow-hidden", className)}
     >
       {loadFailed ? null : (
-      <Document
-        file={fileUrl}
-        loading={null}
-        error={null}
-        noData={null}
-        onLoadError={() => setLoadFailed(true)}
-        className="pointer-events-none select-none bg-white"
-      >
-        <Page
-          pageNumber={1}
-          width={Math.max(1, width)}
-          renderAnnotationLayer={false}
-          renderTextLayer={false}
-          onRenderError={() => setLoadFailed(true)}
-          className="bg-white"
-        />
-      </Document>
+        <Document
+          file={fileUrl}
+          loading={null}
+          error={null}
+          noData={null}
+          onLoadError={() => setLoadFailed(true)}
+          className="pointer-events-none flex select-none items-center justify-center bg-transparent"
+        >
+          <Page
+            pageNumber={1}
+            width={renderWidth}
+            renderAnnotationLayer={false}
+            renderTextLayer={false}
+            onLoadSuccess={(page) => {
+              const viewport = page.getViewport({ scale: 1 })
+              const size = { width: viewport.width, height: viewport.height }
+              setPageSize(size)
+              onPageDimensions?.(size)
+            }}
+            onRenderError={() => setLoadFailed(true)}
+            className="max-h-full max-w-full bg-white shadow-sm"
+          />
+        </Document>
       )}
     </div>
   )
 }
-

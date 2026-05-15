@@ -46,8 +46,14 @@ export function CustomCursor() {
     }
 
     const handleMouseMove = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
       posRef.current = { x: e.clientX, y: e.clientY }
-      visibleRef.current = true
+      if (target?.closest("[data-system-cursor]")) {
+        visibleRef.current = false
+        hoverRef.current = false
+      } else {
+        visibleRef.current = true
+      }
       schedule()
     }
 
@@ -62,6 +68,12 @@ export function CustomCursor() {
 
     const handleHoverStart = (e: MouseEvent) => {
       const target = e.target as HTMLElement
+      if (target.closest("[data-system-cursor]")) {
+        hoverRef.current = false
+        visibleRef.current = false
+        schedule()
+        return
+      }
       const interactive =
         target.tagName === "A" ||
         target.tagName === "BUTTON" ||

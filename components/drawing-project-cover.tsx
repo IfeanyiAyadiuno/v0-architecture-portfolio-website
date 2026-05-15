@@ -1,13 +1,14 @@
 "use client"
 
 import Image from "next/image"
-import { isPdfPath, pdfIframeSrc } from "@/lib/utils"
+import { isPdfPath, pdfIframeSrc, type PdfIframeOptions } from "@/lib/utils"
 
 type DrawingProjectCoverProps = {
   src: string
   alt: string
   sizes?: string
   fit?: "contain" | "cover"
+  pdfView?: PdfIframeOptions["view"]
   /** Raster covers only: intrinsic pixels after decode (for aspect-aware layouts). */
   onRasterLoaded?: (dimensions: { width: number; height: number }) => void
 }
@@ -21,9 +22,21 @@ export function DrawingProjectCover({
   alt,
   sizes = "(max-width: 768px) 50vw, 25vw",
   fit = "contain",
+  pdfView = "FitH",
   onRasterLoaded,
 }: DrawingProjectCoverProps) {
   if (isPdfPath(src)) {
+    if (pdfView === "Fit") {
+      return (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[#0a0a0a]">
+          <iframe
+            title={alt}
+            src={pdfIframeSrc(src, { view: "Fit", compactUi: true })}
+            className="h-full w-full border-0 bg-transparent"
+          />
+        </div>
+      )
+    }
     return (
       <div className="pointer-events-none absolute inset-0 overflow-hidden bg-black">
         <iframe

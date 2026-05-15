@@ -4,7 +4,6 @@ import { useCallback, useState } from "react"
 import Link from "next/link"
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowRight, ChevronDown } from "lucide-react"
-import { getFeaturedAutoCADFiles } from "@/lib/autocad-data"
 import { useAutoCADFiles } from "@/hooks/use-autocad-files"
 import { AutoCADFileCard } from "./autocad-file-card"
 import { AutoCADLightbox } from "./autocad-lightbox"
@@ -12,18 +11,11 @@ import { AutoCADLightbox } from "./autocad-lightbox"
 export function AutoCADSection() {
   const reduceMotion = useReducedMotion()
   const { files, loading } = useAutoCADFiles()
-  const featured = getFeaturedAutoCADFiles(files)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
-  const openAtFeaturedIndex = useCallback(
-    (featuredIndex: number) => {
-      const file = featured[featuredIndex]
-      if (!file) return
-      const globalIndex = files.findIndex((f) => f.id === file.id)
-      setLightboxIndex(globalIndex >= 0 ? globalIndex : featuredIndex)
-    },
-    [featured, files]
-  )
+  const openAtIndex = useCallback((index: number) => {
+    setLightboxIndex(index)
+  }, [])
 
   const closeLightbox = useCallback(() => setLightboxIndex(null), [])
   const goNext = useCallback(() => {
@@ -36,91 +28,57 @@ export function AutoCADSection() {
   }, [files.length])
 
   return (
-    <section id="autocad" className="scroll-mt-28 px-6 py-12 md:py-16">
+    <section id="autocad" className="relative scroll-mt-28 px-6 pb-10 pt-6 md:pb-12 md:pt-8">
       <div className="mx-auto max-w-7xl">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-8 md:mb-10"
-        >
-          <h2 className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold uppercase tracking-[0.05em] text-white md:text-5xl lg:text-6xl">
-            AutoCAD
-          </h2>
-          <p className="mt-4 max-w-xl font-sans text-lg text-[#AAAAAA]">
-            Native AutoCAD work — coloured covers, black &amp; white sheets
-          </p>
-        </motion.div>
+        <h3 className="mb-4 font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA]">
+          AutoCAD
+        </h3>
 
         {loading ? (
-          <p className="font-mono text-sm text-[#AAAAAA]">Loading drawings…</p>
-        ) : featured.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
-            {featured.map((file, index) => (
+          <p className="font-mono text-sm text-[#AAAAAA]">Loading…</p>
+        ) : files.length > 0 ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5">
+            {files.map((file, index) => (
               <motion.div
                 key={file.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.06, duration: 0.45 }}
+                transition={{ delay: index * 0.06, duration: 0.4 }}
               >
                 <AutoCADFileCard
                   file={file}
-                  onSelect={() => openAtFeaturedIndex(index)}
+                  onSelect={() => openAtIndex(index)}
                 />
               </motion.div>
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="border border-[#333333] px-6 py-10 text-center"
-          >
-            <p className="font-mono text-sm text-[#AAAAAA]">
-              Add matching PDFs to{" "}
-              <span className="text-white">public/autocad/CAD FILES/coloured</span>{" "}
-              and{" "}
-              <span className="text-white">
-                public/autocad/CAD FILES/black &amp; white
-              </span>{" "}
-              with the same filename.
-            </p>
-          </motion.div>
+          <p className="font-mono text-sm text-[#AAAAAA]">
+            Add matching PDFs to{" "}
+            <span className="text-white">CAD FILES/coloured</span> and{" "}
+            <span className="text-white">CAD FILES/black &amp; white</span>.
+          </p>
         )}
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="mt-10 flex justify-end"
-        >
+        {files.length > 0 ? (
           <Link
             href="/autocad"
-            className="group inline-flex items-center gap-2 font-mono text-sm text-white transition-colors hover:text-[#AAAAAA]"
+            className="group mt-6 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA] transition-colors hover:text-white"
             data-clickable="true"
           >
             View all AutoCAD
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </Link>
-        </motion.div>
+        ) : null}
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ delay: 0.25, duration: 0.5 }}
-          className="mt-10 flex justify-center md:mt-12"
-        >
+        <div className="mt-8 flex justify-center md:mt-10">
           <Link
-            href="/#art"
+            href="/#renderings"
             data-clickable="true"
-            className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+            className="group flex flex-col items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >
-            <span className="sr-only">Scroll to artist work</span>
+            <span className="sr-only">Scroll to renderings</span>
             <span
               aria-hidden
               className="font-mono text-[10px] uppercase tracking-[0.4em] text-[#AAAAAA] transition-colors group-hover:text-white/90"
@@ -129,18 +87,18 @@ export function AutoCADSection() {
             </span>
             <motion.span
               aria-hidden
-              className="flex flex-col items-center text-white/80 transition-colors group-hover:text-white"
-              animate={reduceMotion ? { y: 0 } : { y: [0, 6, 0] }}
+              className="text-white/80 transition-colors group-hover:text-white"
+              animate={reduceMotion ? { y: 0 } : { y: [0, 5, 0] }}
               transition={
                 reduceMotion
                   ? { duration: 0 }
                   : { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
               }
             >
-              <ChevronDown className="h-6 w-6" strokeWidth={1.5} />
+              <ChevronDown className="h-5 w-5" strokeWidth={1.5} />
             </motion.span>
           </Link>
-        </motion.div>
+        </div>
       </div>
 
       {lightboxIndex !== null && files.length > 0 ? (

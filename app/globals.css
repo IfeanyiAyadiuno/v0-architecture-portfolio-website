@@ -86,6 +86,11 @@
   [contenteditable="true"] {
     cursor: text !important;
   }
+  /* Site header: show the normal pointer over navigation. */
+  [data-system-cursor],
+  [data-system-cursor] * {
+    cursor: auto !important;
+  }
 }
 
 /* Custom scrollbar */
