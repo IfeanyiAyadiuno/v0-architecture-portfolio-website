@@ -41,7 +41,7 @@ export function HeroSection() {
   const reduceMotion = useReducedMotion()
   const line1 = "ARCHITECTURAL TECHNOLOGIST + ARTIST"
   const line2 = "[CHIDERA UZO]"
-  const line3 = "Based in [Edmonton] — Available 2025"
+  const line3 = "Based in [Edmonton] — Available 2026"
 
   return (
     <section className="relative isolate z-10 flex h-screen flex-col items-center justify-center px-6">

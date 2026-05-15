@@ -28,18 +28,22 @@ export function Navigation() {
     }
   }
 
-  const handleArtClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleSectionClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    sectionId: string,
+    hash: string
+  ) => {
     if (pathname !== "/") return
     e.preventDefault()
     const instant = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    const el = document.getElementById("art")
+    const el = document.getElementById(sectionId)
     if (el) {
       el.scrollIntoView({
         behavior: instant ? "auto" : "smooth",
         block: "start",
       })
     }
-    window.history.replaceState(null, "", "/#art")
+    window.history.replaceState(null, "", hash)
   }
 
   return (
@@ -78,8 +82,15 @@ export function Navigation() {
             <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
           </Link>
           <Link
+            href="/autocad"
+            className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
+          >
+            AUTOCAD
+            <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
+          </Link>
+          <Link
             href="/#art"
-            onClick={handleArtClick}
+            onClick={(e) => handleSectionClick(e, "art", "/#art")}
             className="group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
           >
             ART
