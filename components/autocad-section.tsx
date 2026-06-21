@@ -74,7 +74,7 @@ export function AutoCADSection() {
 
         <div className="mt-8 flex justify-center md:mt-10">
           <Link
-            href="/#renderings"
+            href="#renderings"
             data-clickable="true"
             className="group flex flex-col items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
           >

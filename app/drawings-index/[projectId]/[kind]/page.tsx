@@ -274,8 +274,8 @@ function DrawingsKindBackLink({ projectId }: { projectId: number }) {
   const backToProjectModal =
     reopen != null && Number.isFinite(id) && reopen === String(id)
   const href = backToProjectModal
-    ? returnTo === "home"
-      ? `/?project=${encodeURIComponent(String(id))}`
+    ? returnTo === "technologist" || returnTo === "home"
+      ? `/technologist?project=${encodeURIComponent(String(id))}`
       : `/drawings-index?project=${encodeURIComponent(String(id))}`
     : "/drawings-index"
   const label = backToProjectModal ? "Back to project" : "Drawings index"

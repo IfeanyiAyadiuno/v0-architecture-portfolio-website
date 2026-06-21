@@ -14,6 +14,8 @@ import {
 import { DrawingModal } from "./drawing-modal"
 import { DrawingProjectCard } from "./drawing-project-card"
 
+const TECHNOLOGIST_PATH = "/technologist"
+
 function DrawingGrid({
   projects,
   onSelect,
@@ -60,7 +62,7 @@ function TechnicalDrawingsSectionInner() {
     const p = getDrawingProjectById(id)
     if (!p) return
     setSelectedProject(p)
-    router.replace("/", { scroll: false })
+    router.replace(TECHNOLOGIST_PATH, { scroll: false })
   }, [searchParams, router])
 
   return (
@@ -124,7 +126,7 @@ function TechnicalDrawingsSectionInner() {
         className="mt-10 flex justify-center md:mt-12"
       >
         <Link
-          href="/#autocad"
+          href="#autocad"
           data-clickable="true"
           className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
@@ -154,7 +156,7 @@ function TechnicalDrawingsSectionInner() {
         <DrawingModal
           project={selectedProject}
           linkKindReturnToIndexModal
-          kindReturnOrigin="home"
+          kindReturnOrigin="technologist"
           onClose={() => setSelectedProject(null)}
         />
       )}

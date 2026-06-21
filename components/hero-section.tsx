@@ -37,9 +37,15 @@ function AnimatedText({ text, className }: { text: string; className?: string })
   )
 }
 
-export function HeroSection() {
+export function HeroSection({
+  roleLine = "ARCHITECTURAL TECHNOLOGIST",
+  scrollTarget = "#drawings",
+}: {
+  roleLine?: string
+  scrollTarget?: string
+} = {}) {
   const reduceMotion = useReducedMotion()
-  const line1 = "ARCHITECTURAL TECHNOLOGIST + ARTIST"
+  const line1 = roleLine
   const line2 = "[CHIDERA UZO]"
   const line3 = "Based in [Edmonton] — Available 2026"
 
@@ -93,7 +99,7 @@ export function HeroSection() {
         className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 md:bottom-12"
       >
         <Link
-          href="/#drawings"
+          href={scrollTarget}
           data-clickable="true"
           className="group flex flex-col items-center gap-2 outline-none transition-colors hover:text-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >

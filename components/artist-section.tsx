@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
-import { artistWorks } from "@/lib/data"
+import { personalWorks } from "@/lib/data"
 import { Lightbox } from "./lightbox"
 
 const TRAIN_VIDEO_MP4 = "/art/IMG_2757.mp4"
@@ -129,18 +129,18 @@ export function ArtistSection() {
 
   const goNext = () => {
     if (lightboxIndex !== null) {
-      setLightboxIndex((lightboxIndex + 1) % artistWorks.length)
+      setLightboxIndex((lightboxIndex + 1) % personalWorks.length)
     }
   }
 
   const goPrev = () => {
     if (lightboxIndex !== null) {
-      setLightboxIndex((lightboxIndex - 1 + artistWorks.length) % artistWorks.length)
+      setLightboxIndex((lightboxIndex - 1 + personalWorks.length) % personalWorks.length)
     }
   }
 
   return (
-    <section id="art" className="scroll-mt-28 bg-black px-6 py-12 md:py-16">
+    <section id="art" className="scroll-mt-28 border-t border-[#222222] bg-black px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -150,10 +150,10 @@ export function ArtistSection() {
           className="mb-6 md:mb-8"
         >
           <h2 className="font-[family-name:var(--font-space-grotesk)] text-4xl font-bold uppercase tracking-[0.05em] text-white md:text-5xl lg:text-6xl">
-            Artist
+            Personal Work
           </h2>
           <p className="mt-4 max-w-xl font-sans text-lg text-[#AAAAAA]">
-            Personal work — studies — experiments
+            Studies — experiments — archive
           </p>
         </motion.div>
 
@@ -168,7 +168,7 @@ export function ArtistSection() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-          {artistWorks.map((work, index) => (
+          {personalWorks.map((work, index) => (
             <button
               key={work.id}
               type="button"
@@ -195,7 +195,7 @@ export function ArtistSection() {
 
       {lightboxIndex !== null && (
         <Lightbox
-          works={artistWorks}
+          works={personalWorks}
           currentIndex={lightboxIndex}
           onClose={closeLightbox}
           onNext={goNext}

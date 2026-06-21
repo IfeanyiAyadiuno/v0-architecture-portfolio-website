@@ -11,7 +11,7 @@ export default function GlazingSimulatorPage() {
       <main className="h-screen bg-black pt-16">
         <div className="pointer-events-none absolute left-6 top-20 z-10">
           <Link
-            href="/"
+            href="/technologist"
             className="pointer-events-auto inline-flex items-center gap-2 border border-[#333333] bg-black/80 px-3 py-2 font-mono text-xs uppercase tracking-[0.12em] text-[#AAAAAA] transition-colors hover:border-white hover:text-white"
             data-clickable="true"
           >

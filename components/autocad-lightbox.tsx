@@ -156,10 +156,7 @@ export function AutoCADLightbox({
           nativeFs && !immersiveFs && "min-h-screen"
         )}
       >
-        <div
-          data-system-cursor
-          className="relative z-30 flex shrink-0 items-center gap-3 border-b border-[#333333] px-3 py-2.5 md:px-4 md:py-3"
-        >
+        <div className="relative z-30 flex shrink-0 items-center gap-3 border-b border-[#333333] px-3 py-2.5 md:px-4 md:py-3">
           <button
             type="button"
             onClick={() => void closeViewer()}
@@ -201,7 +198,6 @@ export function AutoCADLightbox({
                 }}
                 className="absolute top-1/2 left-2 z-20 inline-flex h-12 w-12 -translate-y-1/2 touch-manipulation items-center justify-center rounded-md bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-black/80 md:left-4"
                 data-clickable="true"
-                data-system-cursor
                 aria-label="Previous"
               >
                 <ChevronLeft className="h-7 w-7" aria-hidden />
@@ -214,7 +210,6 @@ export function AutoCADLightbox({
                 }}
                 className="absolute top-1/2 right-2 z-20 inline-flex h-12 w-12 -translate-y-1/2 touch-manipulation items-center justify-center rounded-md bg-black/60 text-white backdrop-blur-sm transition-colors hover:bg-black/80 md:right-4"
                 data-clickable="true"
-                data-system-cursor
                 aria-label="Next"
               >
                 <ChevronRight className="h-7 w-7" aria-hidden />

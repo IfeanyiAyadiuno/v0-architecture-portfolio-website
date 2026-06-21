@@ -23,9 +23,9 @@ interface DrawingModalProps {
   linkKindReturnToIndexModal?: boolean
   /**
    * Where the project modal lives: `drawings-index` → `?project=` on `/drawings-index`;
-   * `home` → `?project=` on `/` (Technical Drawings on the home page).
+   * `technologist` → `?project=` on `/technologist` (Technical Drawings section).
    */
-  kindReturnOrigin?: "drawings-index" | "home"
+  kindReturnOrigin?: "drawings-index" | "technologist"
 }
 
 /** Choose drawing type (stacked controls); navigates to `/drawings-index/[id]/[slug]`. */
@@ -66,8 +66,8 @@ export function DrawingModal({
     let query = ""
     if (linkKindReturnToIndexModal === true) {
       const q = new URLSearchParams({ reopen: String(project.id) })
-      if (kindReturnOrigin === "home") {
-        q.set("returnTo", "home")
+      if (kindReturnOrigin === "technologist") {
+        q.set("returnTo", "technologist")
       }
       query = `?${q.toString()}`
     }

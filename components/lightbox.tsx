@@ -13,10 +13,11 @@ interface LightboxProps {
   onClose: () => void
   onNext: () => void
   onPrev: () => void
+  variant?: "personal" | "client"
 }
 
 /** Portaled to `document.body` so `fixed` is viewport-anchored (PageTransition uses transforms). */
-export function Lightbox({ works, currentIndex, onClose, onNext, onPrev }: LightboxProps) {
+export function Lightbox({ works, currentIndex, onClose, onNext, onPrev, variant = "personal" }: LightboxProps) {
   const currentWork = works[currentIndex]
   const [container, setContainer] = useState<HTMLElement | null>(null)
 
@@ -135,8 +136,18 @@ export function Lightbox({ works, currentIndex, onClose, onNext, onPrev }: Light
           onClick={(e) => e.stopPropagation()}
         >
           <p className="font-mono text-sm text-white">
-            {currentWork.title} — {currentWork.medium} — {currentWork.dimensions} —{" "}
-            {currentWork.year}
+            {variant === "client" || currentWork.client ? (
+              <>
+                {currentWork.title} — {currentWork.projectType ?? currentWork.medium} —{" "}
+                {currentWork.client ?? currentWork.dimensions} — {currentWork.role} —{" "}
+                {currentWork.year}
+              </>
+            ) : (
+              <>
+                {currentWork.title} — {currentWork.medium} — {currentWork.dimensions} —{" "}
+                {currentWork.year}
+              </>
+            )}
           </p>
           <p className="mt-2 font-mono text-xs text-[#AAAAAA]">
             {currentIndex + 1} / {works.length}

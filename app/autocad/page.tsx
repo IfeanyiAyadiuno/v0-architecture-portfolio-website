@@ -53,7 +53,7 @@ export default function AutoCADPage() {
               className="mb-12"
             >
               <Link
-                href="/#autocad"
+                href="/technologist#autocad"
                 className="mb-8 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.12em] text-[#AAAAAA] transition-colors hover:text-white"
                 data-clickable="true"
               >
