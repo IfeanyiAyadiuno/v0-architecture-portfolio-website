@@ -2,8 +2,11 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import Image from "next/image"
-import { clientProjects, type ClientProject, type ArtistWork } from "@/lib/data"
+import { TrimmedImage } from "./trimmed-image"
+import type { ClientProject } from "@/lib/client-work-data"
+import type { ArtistWork } from "@/lib/data"
+import { useClientProjects } from "@/hooks/use-client-projects"
+import { ClientMagazineViewer } from "./client-magazine-viewer"
 import { Lightbox } from "./lightbox"
 
 function projectToLightboxWorks(project: ClientProject): ArtistWork[] {
@@ -50,39 +53,33 @@ function ClientProjectCard({
         data-clickable={isInteractive ? "true" : undefined}
         className="group relative block w-full overflow-hidden border border-[#333333] text-left outline-none transition-[border-color,opacity] duration-300 hover:border-white focus-visible:border-white focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:cursor-default"
       >
-        <div className="relative aspect-[4/3] overflow-hidden bg-[#0a0a0a]">
-          {hasCover ? (
-            <Image
+        {hasCover ? (
+          <div className="relative w-full leading-none">
+            <TrimmedImage
               src={project.cover!}
               alt={project.title}
-              fill
               sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+              className="block h-auto w-full transition-transform duration-500 group-hover:scale-[1.005]"
             />
-          ) : (
-            <div
-              className="absolute inset-0 bg-[linear-gradient(145deg,#111111_0%,#0a0a0a_45%,#151515_100%)]"
-              aria-hidden
-            />
-          )}
-
+          </div>
+        ) : (
           <div
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(0,0,0,0.85)_100%)]"
+            className="aspect-[4/3] w-full bg-[linear-gradient(145deg,#111111_0%,#0a0a0a_45%,#151515_100%)]"
             aria-hidden
           />
+        )}
 
-          <div className="absolute inset-x-0 bottom-0 p-5 md:p-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#888888]">
-              {String(index + 1).padStart(2, "0")} · {project.type}
-            </p>
-            <h3 className="mt-2 font-[family-name:var(--font-space-grotesk)] text-xl font-bold uppercase tracking-[0.04em] text-white md:text-2xl">
-              {project.title}
-            </h3>
-            <p className="mt-2 font-mono text-xs text-[#AAAAAA]">{project.client}</p>
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-[#666666]">
-              {project.role} · {project.year}
-            </p>
-          </div>
+        <div className="border-t border-[#222222] p-5 md:p-6">
+          <p className="font-mono text-[10px] uppercase tracking-[0.35em] text-[#888888]">
+            {String(index + 1).padStart(2, "0")} · {project.type}
+          </p>
+          <h3 className="mt-2 font-[family-name:var(--font-space-grotesk)] text-xl font-bold uppercase tracking-[0.04em] text-white md:text-2xl">
+            {project.title}
+          </h3>
+          <p className="mt-2 font-mono text-xs text-[#AAAAAA]">{project.client}</p>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-wide text-[#666666]">
+            {project.role} · {project.year}
+          </p>
         </div>
       </button>
     </motion.div>
@@ -90,15 +87,25 @@ function ClientProjectCard({
 }
 
 export function ClientWorkSection() {
+  const { projects, loading, error } = useClientProjects()
+  const [magazineProject, setMagazineProject] = useState<ClientProject | null>(null)
   const [lightboxWorks, setLightboxWorks] = useState<ArtistWork[] | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState(0)
 
   const openProject = (project: ClientProject) => {
+    if (project.displayMode === "magazine") {
+      if (project.images.length === 0 && !project.cover) return
+      setMagazineProject(project)
+      return
+    }
+
     const works = projectToLightboxWorks(project)
     if (works.length === 0) return
     setLightboxWorks(works)
     setLightboxIndex(0)
   }
+
+  const closeMagazine = () => setMagazineProject(null)
 
   const closeLightbox = () => setLightboxWorks(null)
 
@@ -133,17 +140,32 @@ export function ClientWorkSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
-          {clientProjects.map((project, index) => (
-            <ClientProjectCard
-              key={project.id}
-              project={project}
-              index={index}
-              onSelect={openProject}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <p className="font-mono text-sm text-[#666666]">Loading client work…</p>
+        ) : error ? (
+          <p className="font-mono text-sm text-[#888888]">{error}</p>
+        ) : projects.length === 0 ? (
+          <p className="font-mono text-sm text-[#666666]">
+            Add project folders under{" "}
+            <span className="text-[#AAAAAA]">public/art/CLIENT/</span>
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+            {projects.map((project, index) => (
+              <ClientProjectCard
+                key={project.id}
+                project={project}
+                index={index}
+                onSelect={openProject}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {magazineProject ? (
+        <ClientMagazineViewer project={magazineProject} onClose={closeMagazine} />
+      ) : null}
 
       {lightboxWorks && lightboxWorks.length > 0 && (
         <Lightbox

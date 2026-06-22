@@ -241,6 +241,60 @@
   animation: hero-headline-glow 6s ease-in-out infinite;
 }
 
+/* —— Client magazine viewer —— */
+
+.magazine-scroll {
+  scroll-snap-type: y proximity;
+}
+
+.magazine-spread {
+  position: relative;
+}
+
+.magazine-chapter-accent {
+  background: var(--magazine-accent, #d41818);
+}
+
+.magazine-chapter::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 70% 55% at 50% 38%,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 72%
+  );
+}
+
+@media (min-width: 768px) {
+  .magazine-spread::after {
+    content: "";
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 12%,
+      rgba(255, 255, 255, 0.14) 50%,
+      rgba(255, 255, 255, 0.08) 88%,
+      transparent 100%
+    );
+    box-shadow: -6px 0 20px rgba(0, 0, 0, 0.45), 6px 0 20px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .magazine-scroll {
+    scroll-snap-type: none;
+  }
+}
+
 /* Performance: continuous filters / noise are costly on low-power & touch GPUs */
 @media (prefers-reduced-motion: reduce) {
   .fx-aurora,

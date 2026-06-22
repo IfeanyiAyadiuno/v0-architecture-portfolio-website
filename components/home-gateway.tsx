@@ -11,7 +11,7 @@ const paths = [
     href: "/technologist",
     index: "01",
     title: "CHIDERA AS AN ARCHITECTURAL TECHNOLOGIST",
-    description: "Technical drawings, AutoCAD, renderings",
+    description: "Technical drawings — shop drawings — renderings",
     accent: "from-white/[0.04] to-transparent",
   },
   {

@@ -241,43 +241,6 @@ export const renderings = [
 ]
 
 // Artist works — files in `public/art/` (`%28` / `%29` = parentheses in filenames)
-// —— Creative Director: client projects ——
-
-export type ClientProjectType = "Ad Direction" | "Spatial Design"
-
-export type ClientProject = {
-  id: string
-  title: string
-  client: string
-  type: ClientProjectType
-  role: string
-  year: string
-  /** Add cover to public/art/client/ when ready */
-  cover?: string
-  images: { src: string; alt?: string }[]
-}
-
-export const clientProjects: ClientProject[] = [
-  {
-    id: "myhoop-ad",
-    title: "MYHOOP AD",
-    client: "MyHoop",
-    type: "Ad Direction",
-    role: "Creative Director",
-    year: "2026",
-    images: [],
-  },
-  {
-    id: "syndicate-collections-fashion-show",
-    title: "FASHION SHOW",
-    client: "Syndicate Collections",
-    type: "Spatial Design",
-    role: "Technical Event Designer — Space Design",
-    year: "2026",
-    images: [],
-  },
-]
-
 // —— Creative Director: personal work ——
 
 const personalWorksBase = [

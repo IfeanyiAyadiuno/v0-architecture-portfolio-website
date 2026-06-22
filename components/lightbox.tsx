@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 import type { ArtistWork } from "@/lib/data"
+import { TrimmedImage } from "./trimmed-image"
 
 interface LightboxProps {
   works: ArtistWork[]
@@ -14,6 +15,17 @@ interface LightboxProps {
   onNext: () => void
   onPrev: () => void
   variant?: "personal" | "client"
+}
+
+function ClientLightboxImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <TrimmedImage
+      src={src}
+      alt={alt}
+      sizes="100vw"
+      className="block h-auto w-full"
+    />
+  )
 }
 
 /** Portaled to `document.body` so `fixed` is viewport-anchored (PageTransition uses transforms). */
@@ -108,23 +120,37 @@ export function Lightbox({ works, currentIndex, onClose, onNext, onPrev, variant
           <ChevronRight className="pointer-events-none h-8 w-8 shrink-0" aria-hidden />
         </button>
 
-        <div className="flex min-h-0 flex-1 items-center justify-center px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+6.5rem)] md:px-6 md:pt-24">
+        <div
+          className={
+            variant === "client"
+              ? "flex min-h-0 flex-1 overflow-y-auto px-0 pb-6 pt-[calc(env(safe-area-inset-top,0px)+6.5rem)] md:pt-24"
+              : "flex min-h-0 flex-1 items-center justify-center px-4 pb-6 pt-[calc(env(safe-area-inset-top,0px)+6.5rem)] md:px-6 md:pt-24"
+          }
+        >
           <motion.div
             key={currentWork.id}
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.98, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
+            exit={{ scale: 0.98, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="relative h-[min(70dvh,720px)] w-full max-w-4xl"
+            className={
+              variant === "client"
+                ? "w-full max-w-5xl leading-none"
+                : "relative h-[min(70dvh,720px)] w-full max-w-4xl"
+            }
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={currentWork.image}
-              alt={currentWork.title}
-              fill
-              className="object-cover"
-              sizes="100vw"
-            />
+            {variant === "client" ? (
+              <ClientLightboxImage src={currentWork.image} alt={currentWork.title} />
+            ) : (
+              <Image
+                src={currentWork.image}
+                alt={currentWork.title}
+                fill
+                className="object-cover"
+                sizes="100vw"
+              />
+            )}
           </motion.div>
         </div>
 
