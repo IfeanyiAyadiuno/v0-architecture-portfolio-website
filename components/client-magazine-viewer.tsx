@@ -149,8 +149,8 @@ function MagazineAmbient({
   )
 }
 
-/** Clear space between header block bottom and poster red rule (~0.5in–1in). */
-const COVER_HEADER_GAP = "clamp(0.5rem, 0.75in, 1rem)"
+/** Clear space between header block bottom and poster red rule. */
+const COVER_HEADER_GAP = "clamp(1.75rem, 4vw, 3.5rem)"
 const DEFAULT_COVER_RED_LINE_RATIO = 0.28
 
 function CoverHeaderContent({
@@ -193,13 +193,6 @@ function CoverHeaderContent({
         }`}
       >
         {project.type} · {project.year}
-      </p>
-      <p
-        className={`font-mono uppercase tracking-[0.4em] text-[#555555] ${
-          overlaid ? "mt-1 text-[10px] md:mt-1.5 md:text-[11px]" : "mt-2 text-[10px]"
-        }`}
-      >
-        {project.title}
       </p>
     </>
   )

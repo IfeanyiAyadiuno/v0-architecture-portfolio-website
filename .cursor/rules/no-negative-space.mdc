@@ -1,0 +1,18 @@
+---
+description: Portfolio images must display at natural size with no letterboxing or empty padding
+globs: components/**/*.{tsx,ts},app/**/*.{tsx,ts}
+alwaysApply: true
+---
+
+# No negative space (portfolio images)
+
+When displaying portfolio images (client work, magazine spreads, covers, lightboxes):
+
+- **Never crop** unless the user explicitly asks for crop (`object-cover` in a fixed frame).
+- **No letterboxing**: avoid fixed aspect-ratio boxes with `object-contain` — they create black bars.
+- **Intrinsic sizing**: use `block h-auto w-full` (or `w-auto max-w-full`) so the container matches the image.
+- **No decorative padding** around images: skip matte borders, large min-heights, and centered empty viewport sections.
+- **Magazine layouts**: stack pages edge-to-edge; chapter labels are thin dividers, not full-screen gaps.
+- **White margins in source files**: auto-trim near-white borders on client/magazine images via `TrimmedImage`.
+
+Personal work grids may keep `object-cover` only where intentional for uniform tiles.
