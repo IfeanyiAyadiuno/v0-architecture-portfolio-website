@@ -4,8 +4,6 @@ import { useMemo, useState } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { ArrowLeft, ChevronDown } from "lucide-react"
-import { Navigation } from "@/components/navigation"
-import { CustomCursor } from "@/components/custom-cursor"
 import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 import { AutoCADFileCard } from "@/components/autocad-file-card"
@@ -41,8 +39,6 @@ export default function AutoCADPage() {
 
   return (
     <>
-      <CustomCursor />
-      <Navigation />
       <PageTransition>
         <main className="min-h-screen bg-black pt-24">
           <div className="mx-auto max-w-7xl px-6">

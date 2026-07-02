@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { useMounted } from "@/hooks/use-mounted"
 
 const DOT_SIZE = 8
 const DOT_OFFSET = DOT_SIZE / 2
@@ -10,6 +11,7 @@ const DOT_OFFSET = DOT_SIZE / 2
  * Position updates via rAF + direct DOM writes to avoid layout thrash.
  */
 export function CustomCursor() {
+  const mounted = useMounted()
   const [finePointer, setFinePointer] = useState(false)
   const dotRef = useRef<HTMLDivElement>(null)
   const posRef = useRef({ x: 0, y: 0 })
@@ -70,7 +72,7 @@ export function CustomCursor() {
     }
   }, [finePointer])
 
-  if (!finePointer) return null
+  if (!mounted || !finePointer) return null
 
   return (
     <div

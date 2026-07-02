@@ -7,8 +7,6 @@ import dynamic from "next/dynamic"
 import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
 import { ArrowLeft, Maximize2, Minimize2 } from "lucide-react"
-import { Navigation } from "@/components/navigation"
-import { CustomCursor } from "@/components/custom-cursor"
 import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 import { getDrawingProjectById, slugToKind } from "@/lib/data"
@@ -376,8 +374,6 @@ export default function ProjectDrawingKindPage() {
   if (!project || !kind || !sheet) {
     return (
       <>
-        <CustomCursor />
-        <Navigation />
         <PageTransition>
           <main className="min-h-screen bg-black px-6 pb-20 pt-32 text-white">
             <p className="font-mono text-sm text-[#AAAAAA]">
@@ -407,8 +403,6 @@ export default function ProjectDrawingKindPage() {
 
   return (
     <>
-      <CustomCursor />
-      <Navigation />
       <PageTransition>
         <main className="min-h-screen bg-black px-6 pb-20 pt-24">
           <div className="mx-auto max-w-6xl">

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { SiteChrome } from '@/components/site-chrome'
+import { ScrollScopeProvider } from '@/contexts/scroll-scope'
 import './globals.css'
 
 const inter = Inter({ 
@@ -39,7 +41,10 @@ export default function RootLayout({
         className="font-sans antialiased overflow-x-hidden bg-black text-white"
         suppressHydrationWarning
       >
-        {children}
+        <ScrollScopeProvider>
+          <SiteChrome />
+          {children}
+        </ScrollScopeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

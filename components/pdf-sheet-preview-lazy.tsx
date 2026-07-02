@@ -11,3 +11,15 @@ export const PdfSheetPreview = dynamic(
     ),
   }
 )
+
+export const MagazinePdfPage = dynamic(
+  () => import("./pdf-sheet-preview").then((m) => m.MagazinePdfPage),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full bg-[#050505] leading-none" aria-hidden>
+        <div className="aspect-[4/3] w-full animate-pulse bg-[#111111]" />
+      </div>
+    ),
+  }
+)

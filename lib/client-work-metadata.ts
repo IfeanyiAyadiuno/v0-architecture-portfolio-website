@@ -11,10 +11,10 @@ type ClientProjectMeta = {
   accentColor?: string
   /** Display titles for subfolders — keyed by exact folder name */
   sectionLabels?: Record<string, string>
+  /** Chapter order — exact subfolder names; overrides alphabetical sort */
+  sectionOrder?: string[]
   /** Looping ambient track — path under public/ */
   ambientAudio?: string
-  /** Magazine cover: Y position of artwork red rule as fraction of image height (0–1). */
-  coverRedLineRatio?: number
 }
 
 /** Metadata keyed by exact folder name under `public/art/CLIENT/`. */
@@ -35,10 +35,12 @@ export const CLIENT_FOLDER_META: Record<string, ClientProjectMeta> = {
     year: "2026",
     displayMode: "magazine",
     accentColor: "#d41818",
-    coverRedLineRatio: 0.104,
     sectionLabels: {
+      Planning: "THE PLANNING",
+      Setup: "THE SETUP",
       "Runway pictures": "THE RUNWAY",
     },
+    sectionOrder: ["Planning", "Setup", "Runway pictures"],
     ambientAudio: "/art/CLIENT/Syndicate Collection/ambient.mp3",
   },
 }
@@ -77,7 +79,7 @@ export function metaForFolder(folderName: string): ClientProjectMeta & {
     client: folderName,
     type: "Ad Direction",
     role: "Creative Director",
-    year: String(new Date().getFullYear()),
+    year: "2026",
     displayMode: "gallery",
   }
 }

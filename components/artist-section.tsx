@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import Image from "next/image"
 import { personalWorks } from "@/lib/data"
+import { useMounted } from "@/hooks/use-mounted"
 import { Lightbox } from "./lightbox"
 
 const TRAIN_VIDEO_MP4 = "/art/IMG_2757.mp4"
@@ -22,6 +23,7 @@ function ArtistVideoStrip({
   ariaLabel: string
   errorFilename: string
 }) {
+  const mounted = useMounted()
   const reduceMotion = useReducedMotion()
   const [failed, setFailed] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -65,7 +67,7 @@ function ArtistVideoStrip({
   return (
     <motion.div
       ref={stripRef}
-      initial={{ y: 14 }}
+      initial={mounted ? { y: 14 } : false}
       whileInView={{ y: 0 }}
       viewport={{ once: true, amount: 0.12 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
@@ -122,6 +124,7 @@ function ArtistVideoStrip({
 }
 
 export function ArtistSection() {
+  const mounted = useMounted()
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
 
   const openLightbox = (index: number) => setLightboxIndex(index)
@@ -143,7 +146,7 @@ export function ArtistSection() {
     <section id="art" className="scroll-mt-28 border-t border-[#222222] bg-black px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={mounted ? { opacity: 0, y: 16 } : false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.35 }}

@@ -3,8 +3,6 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
-import { Navigation } from "@/components/navigation"
-import { CustomCursor } from "@/components/custom-cursor"
 import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 import { processNotes } from "@/lib/data"
@@ -32,8 +30,6 @@ export default function ProcessPage() {
 
   return (
     <>
-      <CustomCursor />
-      <Navigation />
       <PageTransition>
         <main className="min-h-screen bg-black pt-24">
           <div className="max-w-3xl mx-auto px-6">

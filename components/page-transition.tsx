@@ -3,12 +3,14 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 import { ReactNode, useLayoutEffect, useRef } from "react"
+import { useMounted } from "@/hooks/use-mounted"
 
 interface PageTransitionProps {
   children: ReactNode
 }
 
 export function PageTransition({ children }: PageTransitionProps) {
+  const mounted = useMounted()
   const pathname = usePathname()
   const prevPathname = useRef<string | null>(null)
 
@@ -35,7 +37,7 @@ export function PageTransition({ children }: PageTransitionProps) {
     <AnimatePresence mode="wait">
       <motion.div
         key={pathname}
-        initial={{ opacity: 0 }}
+        initial={mounted ? { opacity: 0 } : false}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}

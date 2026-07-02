@@ -6,13 +6,15 @@ import { TrimmedImage } from "./trimmed-image"
 import type { ClientProject } from "@/lib/client-work-data"
 import type { ArtistWork } from "@/lib/data"
 import { useClientProjects } from "@/hooks/use-client-projects"
+import { useMounted } from "@/hooks/use-mounted"
 import { ClientMagazineViewer } from "./client-magazine-viewer"
 import { Lightbox } from "./lightbox"
 
 function projectToLightboxWorks(project: ClientProject): ArtistWork[] {
-  if (project.images.length === 0) return []
+  const imageMedia = project.images.filter((item) => item.type === "image")
+  if (imageMedia.length === 0) return []
 
-  return project.images.map((image, index) => ({
+  return imageMedia.map((image, index) => ({
     id: index + 1,
     category: "personal" as const,
     title: project.title,
@@ -35,13 +37,14 @@ function ClientProjectCard({
   index: number
   onSelect: (project: ClientProject) => void
 }) {
+  const mounted = useMounted()
   const hasCover = Boolean(project.cover)
   const hasGallery = project.images.length > 0
   const isInteractive = hasCover || hasGallery
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={mounted ? { opacity: 0, y: 24 } : false}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.08, duration: 0.45 }}
@@ -86,8 +89,13 @@ function ClientProjectCard({
   )
 }
 
-export function ClientWorkSection() {
-  const { projects, loading, error } = useClientProjects()
+export function ClientWorkSection({
+  initialProjects,
+}: {
+  initialProjects?: ClientProject[]
+} = {}) {
+  const mounted = useMounted()
+  const { projects, loading, error } = useClientProjects(initialProjects)
   const [magazineProject, setMagazineProject] = useState<ClientProject | null>(null)
   const [lightboxWorks, setLightboxWorks] = useState<ArtistWork[] | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState(0)
@@ -125,7 +133,7 @@ export function ClientWorkSection() {
     <section id="client-work" className="scroll-mt-28 px-6 py-12 md:py-16">
       <div className="mx-auto max-w-7xl">
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={mounted ? { opacity: 0, y: 16 } : false}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.35 }}

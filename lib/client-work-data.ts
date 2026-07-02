@@ -8,6 +8,8 @@
  *       …/              ← any subfolder with gallery images
  *     Syndicate Collection/
  *       COVER/
+ *       Planning/
+ *       Setup/
  *       Runway pictures/
  */
 
@@ -15,17 +17,23 @@ export type ClientProjectType = "Ad Direction" | "Spatial Design"
 
 export type ClientProjectDisplayMode = "magazine" | "gallery"
 
-export type ClientProjectImage = {
+export type ClientProjectMediaType = "image" | "pdf" | "video"
+
+export type ClientProjectMedia = {
+  type: ClientProjectMediaType
   src: string
   alt?: string
 }
+
+/** @deprecated Alias for {@link ClientProjectMedia} — all section items are media entries. */
+export type ClientProjectImage = ClientProjectMedia
 
 export type ClientProjectSection = {
   /** Display title (may differ from on-disk folder name). */
   name: string
   /** Exact subfolder name under the project directory. */
   folderName?: string
-  images: ClientProjectImage[]
+  images: ClientProjectMedia[]
 }
 
 export type ClientProject = {
@@ -40,11 +48,11 @@ export type ClientProject = {
   accentColor?: string
   /** Display titles for gallery subfolders — keyed by exact folder name. */
   sectionLabels?: Record<string, string>
+  /** Chapter order — exact subfolder names; overrides alphabetical sort. */
+  sectionOrder?: string[]
   ambientAudio?: string
-  /** Magazine cover: Y position of artwork red rule as fraction of image height (0–1). */
-  coverRedLineRatio?: number
   cover?: string
-  images: ClientProjectImage[]
+  images: ClientProjectMedia[]
   /** Magazine layout: one chapter per subfolder (excluding COVER). */
   sections: ClientProjectSection[]
 }

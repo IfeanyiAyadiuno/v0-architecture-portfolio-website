@@ -79,7 +79,7 @@ function TechnicalDrawingsSectionInner() {
             Architectural Technologist
           </h2>
           <p className="mt-4 font-sans text-lg text-[#AAAAAA]">
-            Technical Drawings + Renderings
+            SHOP DRAWINGS - AUTOCAD DETAILS - RENDERINGS
           </p>
         </motion.div>
 

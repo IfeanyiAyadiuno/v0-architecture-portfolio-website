@@ -12,6 +12,10 @@ const nextConfig = {
         source: "/art/:path*.mov",
         headers: [{ key: "Content-Type", value: "video/quicktime" }],
       },
+      {
+        source: "/art/:path*.MOV",
+        headers: [{ key: "Content-Type", value: "video/quicktime" }],
+      },
     ]
   },
 }

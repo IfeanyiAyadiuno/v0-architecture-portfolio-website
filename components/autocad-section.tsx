@@ -31,7 +31,7 @@ export function AutoCADSection() {
     <section id="autocad" className="relative scroll-mt-28 px-6 pb-10 pt-6 md:pb-12 md:pt-8">
       <div className="mx-auto max-w-7xl">
         <h3 className="mb-4 font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA]">
-          AutoCAD
+          AutoCAD Details
         </h3>
 
         {loading ? (

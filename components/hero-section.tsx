@@ -3,6 +3,7 @@
 import { motion, useReducedMotion, type Variants } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import Link from "next/link"
+import { useMounted } from "@/hooks/use-mounted"
 import { ShootingStars } from "./shooting-stars"
 
 const letterVariants: Variants = {
@@ -19,6 +20,13 @@ const letterVariants: Variants = {
 }
 
 function AnimatedText({ text, className }: { text: string; className?: string }) {
+  const mounted = useMounted()
+
+  // Plain span during SSR/first paint so server HTML matches client before mount.
+  if (!mounted) {
+    return <span className={className}>{text}</span>
+  }
+
   return (
     <span className={className}>
       {text.split("").map((char, i) => (
@@ -44,6 +52,7 @@ export function HeroSection({
   roleLine?: string
   scrollTarget?: string
 } = {}) {
+  const mounted = useMounted()
   const reduceMotion = useReducedMotion()
   const line1 = roleLine
   const line2 = "[CHIDERA UZO]"
@@ -63,6 +72,7 @@ export function HeroSection({
       >
         <motion.div
           className="h-[min(88vw,640px)] w-[min(88vw,640px)] rounded-full bg-white/[0.04] blur-[64px] md:blur-[80px]"
+          initial={false}
           animate={{
             scale: [1, 1.05, 1],
             opacity: [0.32, 0.52, 0.32],
@@ -85,7 +95,7 @@ export function HeroSection({
         </p>
 
         <motion.div
-          initial={{ scaleX: 0 }}
+          initial={mounted ? { scaleX: 0 } : false}
           animate={{ scaleX: 1 }}
           transition={{ delay: 1.5, duration: 0.8, ease: "easeInOut" }}
           className="w-full max-w-md mx-auto h-px bg-white origin-left"
@@ -93,7 +103,7 @@ export function HeroSection({
       </div>
 
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={mounted ? { opacity: 0 } : false}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 0.6 }}
         className="absolute bottom-10 left-1/2 z-10 -translate-x-1/2 md:bottom-12"

@@ -2,7 +2,8 @@ import { readdir } from "node:fs/promises"
 import path from "node:path"
 import type {
   ClientProject,
-  ClientProjectImage,
+  ClientProjectMedia,
+  ClientProjectMediaType,
   ClientProjectSection,
 } from "@/lib/client-work-data"
 import {
@@ -14,10 +15,31 @@ import {
 const CLIENT_ROOT = ["art", "CLIENT"] as const
 const COVER_FOLDER = "COVER"
 
-const IMAGE_EXT = /\.(jpe?g|png|webp|gif)$/i
+const MEDIA_EXT = /\.(jpe?g|png|webp|gif|pdf|mov|mp4|webm)$/i
 
-function isImageFile(name: string) {
-  return IMAGE_EXT.test(name)
+function mediaTypeForFile(name: string): ClientProjectMediaType | null {
+  const ext = name.match(/\.([^.]+)$/i)?.[1]?.toLowerCase()
+  if (!ext) return null
+  if (/^(jpe?g|png|webp|gif)$/.test(ext)) return "image"
+  if (ext === "pdf") return "pdf"
+  if (/^(mov|mp4|webm)$/.test(ext)) return "video"
+  return null
+}
+
+function isMediaFile(name: string) {
+  return MEDIA_EXT.test(name)
+}
+
+function mediaEntry(
+  projectFolder: string,
+  relativeParts: string[],
+  filename: string
+): ClientProjectMedia {
+  return {
+    type: mediaTypeForFile(filename) ?? "image",
+    src: clientWorkPublicUrl(projectFolder, ...relativeParts, filename),
+    alt: filename.replace(/\.[^.]+$/, ""),
+  }
 }
 
 function slugify(name: string) {
@@ -38,29 +60,63 @@ export function clientWorkPublicUrl(
   return `/${segments.join("/")}`
 }
 
-async function listImagesInDir(
+async function listMediaInDir(
   absoluteDir: string,
   projectFolder: string,
   relativeParts: string[]
-): Promise<ClientProjectImage[]> {
+): Promise<ClientProjectMedia[]> {
   try {
     const entries = await readdir(absoluteDir)
-    return entries
-      .filter(isImageFile)
+    const mediaFiles = entries.filter(isMediaFile)
+    const movStems = new Set(
+      mediaFiles
+        .filter((name) => /\.mov$/i.test(name))
+        .map((name) => name.replace(/\.mov$/i, "").toLowerCase())
+    )
+    return mediaFiles
+      .filter((name) => {
+        if (/\.mp4$/i.test(name)) {
+          const stem = name.replace(/\.mp4$/i, "").toLowerCase()
+          if (movStems.has(stem)) return false
+        }
+        return true
+      })
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-      .map((filename) => ({
-        src: clientWorkPublicUrl(projectFolder, ...relativeParts, filename),
-        alt: filename.replace(/\.[^.]+$/, ""),
-      }))
+      .map((filename) => mediaEntry(projectFolder, relativeParts, filename))
   } catch {
     return []
   }
 }
 
+function sortSectionEntries(
+  names: string[],
+  sectionOrder?: string[]
+): string[] {
+  if (!sectionOrder?.length) {
+    return [...names].sort((a, b) =>
+      a.localeCompare(b, undefined, { numeric: true })
+    )
+  }
+
+  const orderIndex = new Map(
+    sectionOrder.map((name, index) => [name.toLowerCase(), index] as const)
+  )
+
+  return [...names].sort((a, b) => {
+    const ai = orderIndex.get(a.toLowerCase())
+    const bi = orderIndex.get(b.toLowerCase())
+    if (ai !== undefined && bi !== undefined) return ai - bi
+    if (ai !== undefined) return -1
+    if (bi !== undefined) return 1
+    return a.localeCompare(b, undefined, { numeric: true })
+  })
+}
+
 async function listGallerySections(
   projectDir: string,
   folderName: string,
-  sectionLabels?: Record<string, string>
+  sectionLabels?: Record<string, string>,
+  sectionOrder?: string[]
 ): Promise<ClientProjectSection[]> {
   let entries: { name: string; isDirectory: () => boolean }[]
   try {
@@ -69,21 +125,46 @@ async function listGallerySections(
     return []
   }
 
+  const sectionDirs = new Map(
+    entries
+      .filter((e) => e.isDirectory())
+      .filter((e) => e.name.toLowerCase() !== COVER_FOLDER.toLowerCase())
+      .map((e) => [e.name.toLowerCase(), e.name] as const)
+  )
+
+  const orderedNames = sortSectionEntries(
+    sectionOrder?.length
+      ? [
+          ...sectionOrder,
+          ...[...sectionDirs.values()].filter(
+            (name) =>
+              !sectionOrder.some(
+                (ordered) => ordered.toLowerCase() === name.toLowerCase()
+              )
+          ),
+        ]
+      : [...sectionDirs.values()],
+    sectionOrder
+  )
+
   const sections: ClientProjectSection[] = []
 
-  for (const entry of entries
-    .filter((e) => e.isDirectory())
-    .filter((e) => e.name.toLowerCase() !== COVER_FOLDER.toLowerCase())
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))) {
-    const images = await listImagesInDir(
-      path.join(projectDir, entry.name),
-      folderName,
-      [entry.name]
+  for (const entryName of orderedNames) {
+    const diskName = sectionDirs.get(entryName.toLowerCase()) ?? entryName
+    const images = sectionDirs.has(entryName.toLowerCase())
+      ? await listMediaInDir(
+          path.join(projectDir, diskName),
+          folderName,
+          [diskName]
+        )
+      : []
+    const inOrder = sectionOrder?.some(
+      (ordered) => ordered.toLowerCase() === entryName.toLowerCase()
     )
-    if (images.length > 0) {
+    if (images.length > 0 || inOrder) {
       sections.push({
-        folderName: entry.name,
-        name: resolveSectionLabel(entry.name, sectionLabels),
+        folderName: diskName,
+        name: resolveSectionLabel(entryName, sectionLabels),
         images,
       })
     }
@@ -92,11 +173,11 @@ async function listGallerySections(
   return sections
 }
 
-async function walkGalleryImages(
+async function walkGalleryMedia(
   absoluteDir: string,
   projectFolder: string,
   relativeParts: string[] = []
-): Promise<ClientProjectImage[]> {
+): Promise<ClientProjectMedia[]> {
   let entries: { name: string; isDirectory: () => boolean }[]
   try {
     entries = await readdir(absoluteDir, { withFileTypes: true })
@@ -104,7 +185,7 @@ async function walkGalleryImages(
     return []
   }
 
-  const images: ClientProjectImage[] = []
+  const media: ClientProjectMedia[] = []
 
   for (const entry of entries.sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { numeric: true })
@@ -113,8 +194,8 @@ async function walkGalleryImages(
 
     if (entry.isDirectory()) {
       if (entry.name.toLowerCase() === COVER_FOLDER.toLowerCase()) continue
-      images.push(
-        ...(await walkGalleryImages(
+      media.push(
+        ...(await walkGalleryMedia(
           path.join(absoluteDir, entry.name),
           projectFolder,
           rel
@@ -123,15 +204,12 @@ async function walkGalleryImages(
       continue
     }
 
-    if (isImageFile(entry.name)) {
-      images.push({
-        src: clientWorkPublicUrl(projectFolder, ...rel),
-        alt: entry.name.replace(/\.[^.]+$/, ""),
-      })
+    if (isMediaFile(entry.name)) {
+      media.push(mediaEntry(projectFolder, rel, entry.name))
     }
   }
 
-  return images
+  return media
 }
 
 function sortProjects(projects: ClientProject[]): ClientProject[] {
@@ -165,20 +243,22 @@ export async function listClientProjects(): Promise<ClientProject[]> {
     const projectDir = path.join(rootDir, folderName)
     const meta = metaForFolder(folderName)
 
-    const coverImages = await listImagesInDir(
+    const coverEntries = await listMediaInDir(
       path.join(projectDir, COVER_FOLDER),
       folderName,
       [COVER_FOLDER]
     )
+    const coverImages = coverEntries.filter((item) => item.type === "image")
     const sections = await listGallerySections(
       projectDir,
       folderName,
-      meta.sectionLabels
+      meta.sectionLabels,
+      meta.sectionOrder
     )
     const galleryImages =
       sections.length > 0
         ? sections.flatMap((section) => section.images)
-        : await walkGalleryImages(projectDir, folderName)
+        : await walkGalleryMedia(projectDir, folderName)
 
     const cover = coverImages[0]?.src ?? galleryImages[0]?.src
     const images =

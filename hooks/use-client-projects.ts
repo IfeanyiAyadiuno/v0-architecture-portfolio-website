@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react"
 import type { ClientProject } from "@/lib/client-work-data"
 
-export function useClientProjects() {
-  const [projects, setProjects] = useState<ClientProject[]>([])
-  const [loading, setLoading] = useState(true)
+export function useClientProjects(initialProjects?: ClientProject[]) {
+  const [projects, setProjects] = useState<ClientProject[]>(initialProjects ?? [])
+  const [loading, setLoading] = useState(initialProjects === undefined)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (initialProjects !== undefined) return
+
     let cancelled = false
 
     async function load() {
@@ -34,7 +36,7 @@ export function useClientProjects() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [initialProjects])
 
   return { projects, loading, error }
 }

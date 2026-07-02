@@ -3,8 +3,6 @@
 import { useState, useMemo, useEffect, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Navigation } from "@/components/navigation"
-import { CustomCursor } from "@/components/custom-cursor"
 import { Footer } from "@/components/footer"
 import { PageTransition } from "@/components/page-transition"
 import { DrawingModal } from "@/components/drawing-modal"
@@ -52,8 +50,6 @@ function DrawingsIndexContent() {
 
   return (
     <>
-      <CustomCursor />
-      <Navigation />
       <PageTransition>
         <main className="min-h-screen bg-black pt-24">
           <div className="mx-auto max-w-7xl px-6">

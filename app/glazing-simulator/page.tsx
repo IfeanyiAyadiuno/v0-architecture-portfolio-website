@@ -1,14 +1,9 @@
-import { Navigation } from "@/components/navigation"
-import { CustomCursor } from "@/components/custom-cursor"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 export default function GlazingSimulatorPage() {
   return (
-    <>
-      <CustomCursor />
-      <Navigation />
-      <main className="h-screen bg-black pt-16">
+    <main className="h-screen bg-black pt-16">
         <div className="pointer-events-none absolute left-6 top-20 z-10">
           <Link
             href="/technologist"
@@ -25,7 +20,6 @@ export default function GlazingSimulatorPage() {
           className="h-[calc(100vh-64px)] w-full border-0 bg-black"
         />
       </main>
-    </>
   )
 }
 

@@ -2,11 +2,14 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { useMounted } from "@/hooks/use-mounted"
 
 export function Footer() {
+  const mounted = useMounted()
+
   return (
     <motion.footer
-      initial={{ opacity: 0 }}
+      initial={mounted ? { opacity: 0 } : false}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ duration: 0.8 }}
@@ -43,7 +46,7 @@ export function Footer() {
           </div>
 
           <div className="flex flex-col justify-end items-start md:items-end space-y-2 font-mono text-sm text-[#AAAAAA]">
-            <p>&copy; 2025</p>
+            <p suppressHydrationWarning>&copy; {new Date().getFullYear()}</p>
             <p>Built with Next.js + Framer Motion</p>
           </div>
         </div>
