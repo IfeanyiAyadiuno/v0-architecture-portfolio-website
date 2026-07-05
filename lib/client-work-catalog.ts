@@ -1,5 +1,6 @@
 import { readdir } from "node:fs/promises"
 import path from "node:path"
+import { unstable_cache } from "next/cache"
 import type {
   ClientProject,
   ClientProjectMedia,
@@ -280,3 +281,9 @@ export async function listClientProjects(): Promise<ClientProject[]> {
 
   return sortProjects(projects)
 }
+
+export const getCachedClientProjects = unstable_cache(
+  listClientProjects,
+  ["client-work-projects"],
+  { revalidate: 3600 }
+)

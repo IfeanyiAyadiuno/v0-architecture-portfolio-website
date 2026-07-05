@@ -50,6 +50,8 @@ export type ClientProject = {
   sectionLabels?: Record<string, string>
   /** Chapter order — exact subfolder names; overrides alphabetical sort. */
   sectionOrder?: string[]
+  /** Editorial context for magazine chapter openers — keyed by exact folder name. */
+  sectionContext?: Record<string, string>
   ambientAudio?: string
   cover?: string
   images: ClientProjectMedia[]

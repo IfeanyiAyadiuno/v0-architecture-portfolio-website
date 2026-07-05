@@ -52,3 +52,27 @@ export function clearHashFromUrl(pathname: string) {
     window.history.replaceState(null, "", pathname)
   }
 }
+
+export function scrollToSectionId(sectionId: string, pathname = window.location.pathname) {
+  const instant = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  const behavior: ScrollBehavior = instant ? "auto" : "smooth"
+
+  const performScroll = () => {
+    const el = document.getElementById(sectionId)
+    if (el) {
+      el.scrollIntoView({ behavior, block: "start" })
+    }
+    window.history.replaceState(null, "", `${pathname}#${sectionId}`)
+  }
+
+  const overlayClose = getActiveOverlayClose()
+  if (overlayClose) {
+    overlayClose()
+    requestAnimationFrame(() => {
+      requestAnimationFrame(performScroll)
+    })
+    return
+  }
+
+  performScroll()
+}

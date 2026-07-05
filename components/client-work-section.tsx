@@ -1,14 +1,24 @@
 "use client"
 
 import { useState } from "react"
+import dynamic from "next/dynamic"
 import { motion } from "framer-motion"
 import { TrimmedImage } from "./trimmed-image"
 import type { ClientProject } from "@/lib/client-work-data"
 import type { ArtistWork } from "@/lib/data"
 import { useClientProjects } from "@/hooks/use-client-projects"
 import { useMounted } from "@/hooks/use-mounted"
-import { ClientMagazineViewer } from "./client-magazine-viewer"
-import { Lightbox } from "./lightbox"
+
+const ClientMagazineViewer = dynamic(
+  () =>
+    import("./client-magazine-viewer").then((m) => m.ClientMagazineViewer),
+  { ssr: false }
+)
+
+const Lightbox = dynamic(
+  () => import("./lightbox").then((m) => m.Lightbox),
+  { ssr: false }
+)
 
 function projectToLightboxWorks(project: ClientProject): ArtistWork[] {
   const imageMedia = project.images.filter((item) => item.type === "image")
@@ -62,6 +72,7 @@ function ClientProjectCard({
               src={project.cover!}
               alt={project.title}
               sizes="(max-width: 768px) 100vw, 50vw"
+              priority={index < 2}
               className="block h-auto w-full transition-transform duration-500 group-hover:scale-[1.005]"
             />
           </div>

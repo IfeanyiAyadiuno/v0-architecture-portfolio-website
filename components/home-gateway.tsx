@@ -1,10 +1,15 @@
 "use client"
 
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowUpRight } from "lucide-react"
-import { ShootingStars } from "./shooting-stars"
 import { Footer } from "./footer"
+
+const ShootingStars = dynamic(
+  () => import("./shooting-stars").then((m) => m.ShootingStars),
+  { ssr: false }
+)
 
 const paths = [
   {

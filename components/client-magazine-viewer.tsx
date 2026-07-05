@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
+import { motion, AnimatePresence, useInView, useReducedMotion } from "framer-motion"
 import { Volume2, VolumeX, X } from "lucide-react"
 import type { ClientProject, ClientProjectMedia, ClientProjectSection } from "@/lib/client-work-data"
-import { resolveSectionLabel } from "@/lib/client-work-metadata"
+import { resolveSectionContext, resolveSectionLabel } from "@/lib/client-work-metadata"
 import { useRegisterOverlayClose, useRegisterScrollContainer } from "@/contexts/scroll-scope"
 import { MagazinePdfPage } from "./pdf-sheet-preview-lazy"
 import { TrimmedImage } from "./trimmed-image"
@@ -16,11 +16,19 @@ type MagazineChapter = {
   index: number
   name: string
   id: string
+  context?: string
 }
 
 type MagazineBlock =
   | { kind: "cover" }
-  | { kind: "chapter"; name: string; index: number; id: string; backdrop?: string }
+  | {
+      kind: "chapter"
+      name: string
+      index: number
+      id: string
+      backdrop?: string
+      context?: string
+    }
   | {
       kind: "spread"
       left: ClientProjectMedia | null
@@ -104,6 +112,7 @@ function MagazineScrollVideo({
   scrollRootRef: React.RefObject<HTMLDivElement | null>
 }) {
   const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const reduceMotion = useReducedMotion()
@@ -131,19 +140,26 @@ function MagazineScrollVideo({
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) tryPlay()
+          if (e.isIntersecting) {
+            if (!loaded) {
+              video.load()
+              setLoaded(true)
+            }
+            tryPlay()
+          } else {
+            video.pause()
+          }
         }
       },
       { root, threshold: 0.08 }
     )
     io.observe(target)
-    tryPlay()
 
     return () => {
       video.removeEventListener("canplay", onCanPlay)
       io.disconnect()
     }
-  }, [scrollRootRef, tryPlay])
+  }, [scrollRootRef, tryPlay, loaded])
 
   return (
     <div ref={stripRef} className="relative w-full">
@@ -154,8 +170,8 @@ function MagazineScrollVideo({
           muted
           playsInline
           loop
-          preload="metadata"
-          autoPlay={reduceMotion !== true}
+          preload="none"
+          autoPlay={false}
           onError={() => setFailed(true)}
           aria-label={alt ?? "Project video"}
         >
@@ -263,7 +279,7 @@ function MagazineAmbient({
         ref={audioRef}
         src={encodePublicPath(src)}
         loop
-        preload="auto"
+        preload="none"
         onError={() => setMissing(true)}
       />
       <button
@@ -303,10 +319,10 @@ function CoverHeaderContent({
   return (
     <>
       <p
-        className={`font-mono uppercase tracking-[0.55em] text-[#666666] ${
+        className={`w-full font-mono uppercase text-[#666666] ${
           compact
-            ? "text-[10px] leading-tight sm:text-[11px]"
-            : "text-[10px]"
+            ? "text-[11px] leading-tight tracking-[0.68em] sm:text-xs sm:tracking-[0.72em]"
+            : "text-[10px] tracking-[0.62em]"
         }`}
       >
         {project.client}
@@ -314,24 +330,26 @@ function CoverHeaderContent({
 
       <span
         className={`magazine-chapter-accent h-[3px] ${
-          compact ? "mt-2 w-10 sm:mt-2.5 md:w-12" : "mt-3 w-12 md:mt-4 md:w-16"
+          compact ? "mt-3 w-14 sm:mt-3.5 md:w-16" : "mt-3.5 w-14 md:mt-4 md:w-16"
         }`}
         aria-hidden
       />
 
       <h1
-        className={`font-[family-name:var(--font-space-grotesk)] font-bold uppercase tracking-[0.04em] text-white ${
+        className={`w-full font-[family-name:var(--font-space-grotesk)] font-bold uppercase text-white ${
           compact
-            ? "mt-2 text-2xl leading-none sm:text-3xl md:text-5xl lg:text-6xl"
-            : "mt-2 text-4xl leading-[0.92] md:mt-3 md:text-7xl lg:text-8xl"
+            ? "mt-3 text-3xl leading-none tracking-[0.08em] sm:text-4xl md:mt-4 md:text-6xl lg:text-7xl"
+            : "mt-3 text-4xl leading-[0.92] tracking-[0.07em] md:mt-4 md:text-7xl lg:text-8xl"
         }`}
       >
         {project.title}
       </h1>
 
       <p
-        className={`font-mono uppercase tracking-[0.35em] text-[#888888] ${
-          compact ? "mt-2 text-[10px] sm:text-[11px]" : "mt-3 text-xs md:mt-4"
+        className={`w-full font-mono uppercase text-[#888888] ${
+          compact
+            ? "mt-3 text-[11px] tracking-[0.48em] sm:mt-4 sm:text-xs sm:tracking-[0.52em]"
+            : "mt-4 text-xs tracking-[0.42em] md:mt-5"
         }`}
       >
         {project.type} · {project.year}
@@ -343,36 +361,94 @@ function CoverHeaderContent({
 function CoverChapterToc({
   chapters,
   onChapterClick,
+  onContentsClick,
+  activeChapterId,
+  variant = "cover",
 }: {
   chapters: MagazineChapter[]
   onChapterClick: (id: string) => void
+  onContentsClick?: () => void
+  activeChapterId?: string
+  variant?: "cover" | "opener"
 }) {
   if (chapters.length === 0) return null
+
+  const isOpener = variant === "opener"
 
   return (
     <nav
       aria-label="Chapters"
-      className="mx-auto w-full max-w-xs border-t border-[#222222] pt-4 md:mx-0 md:w-auto md:border-t-0 md:pt-0 md:text-right"
+      className={
+        isOpener
+          ? "mx-auto mt-10 w-full max-w-xs border-t border-white/20 pt-5 md:mt-12 md:max-w-sm md:pt-6"
+          : "mx-auto w-full max-w-xs border-t border-[#222222] pt-4 md:mx-0 md:w-auto md:border-t-0 md:pt-0 md:text-right"
+      }
     >
-      <p className="font-mono text-[9px] uppercase tracking-[0.45em] text-[#555555]">
-        Contents
-      </p>
-      <ul className="mt-2 space-y-1.5 md:mt-2.5">
-        {chapters.map((chapter) => (
-          <li key={chapter.id}>
-            <button
-              type="button"
-              onClick={() => onChapterClick(chapter.id)}
-              className="group inline-flex w-full items-baseline gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-[#666666] transition-colors hover:text-[var(--magazine-accent)] md:justify-end"
-              data-clickable="true"
-            >
-              <span className="shrink-0 text-[#444444] transition-colors group-hover:text-[var(--magazine-accent)]">
-                {String(chapter.index).padStart(2, "0")}
-              </span>
-              <span>{chapter.name}</span>
-            </button>
-          </li>
-        ))}
+      {isOpener && onContentsClick ? (
+        <button
+          type="button"
+          onClick={onContentsClick}
+          className="cursor-pointer font-mono text-[9px] uppercase tracking-[0.45em] text-white/50 transition-colors hover:text-[var(--magazine-accent)]"
+          data-clickable="true"
+        >
+          Contents
+        </button>
+      ) : (
+        <p
+          className={
+            isOpener
+              ? "font-mono text-[9px] uppercase tracking-[0.45em] text-white/50"
+              : "font-mono text-[9px] uppercase tracking-[0.45em] text-[#555555]"
+          }
+        >
+          Contents
+        </p>
+      )}
+      <ul className={`mt-2 space-y-1.5 ${isOpener ? "space-y-2" : "md:mt-2.5"}`}>
+        {chapters.map((chapter) => {
+          const isActive = activeChapterId === chapter.id
+
+          return (
+            <li key={chapter.id}>
+              <button
+                type="button"
+                onClick={() => onChapterClick(chapter.id)}
+                className={
+                  isOpener
+                    ? `group flex w-full flex-col items-center gap-1 font-mono text-[9px] uppercase tracking-[0.22em] transition-colors ${
+                        isActive
+                          ? "text-[var(--magazine-accent)]"
+                          : "text-white/55 hover:text-[var(--magazine-accent)]"
+                      }`
+                    : "group inline-flex w-full items-baseline gap-2 font-mono text-[9px] uppercase tracking-[0.22em] text-[#666666] transition-colors hover:text-[var(--magazine-accent)] md:justify-end"
+                }
+                data-clickable="true"
+              >
+                <span
+                  className={`inline-flex items-baseline gap-2 ${isOpener ? "justify-center" : ""}`}
+                >
+                  <span
+                    className={
+                      isOpener
+                        ? isActive
+                          ? "shrink-0 text-[var(--magazine-accent)]"
+                          : "shrink-0 text-white/40 transition-colors group-hover:text-[var(--magazine-accent)]"
+                        : "shrink-0 text-[#444444] transition-colors group-hover:text-[var(--magazine-accent)]"
+                    }
+                  >
+                    {String(chapter.index).padStart(2, "0")}
+                  </span>
+                  <span>{chapter.name}</span>
+                </span>
+                {isOpener && isActive && chapter.context ? (
+                  <span className="max-w-[20rem] text-center text-[10px] normal-case leading-snug tracking-normal text-white/45">
+                    {chapter.context}
+                  </span>
+                ) : null}
+              </button>
+            </li>
+          )
+        })}
       </ul>
     </nav>
   )
@@ -391,6 +467,7 @@ function MagazineCover({
 
   return (
     <motion.section
+      id="magazine-contents"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
@@ -398,18 +475,16 @@ function MagazineCover({
     >
       <div
         className={`bg-[#050505] px-6 md:px-10 ${
-          cover ? "py-5 md:py-6" : "py-8 md:py-10"
+          cover ? "py-6 md:py-7" : "py-8 md:py-10"
         }`}
       >
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.06, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-5 md:grid-cols-[1fr_minmax(0,auto)_minmax(0,11rem)] md:gap-x-6 lg:grid-cols-[1fr_minmax(0,auto)_13rem]"
+          className="mx-auto grid w-full max-w-6xl grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,11rem)] md:gap-x-8 lg:grid-cols-[minmax(0,1fr)_13rem]"
         >
-          <div className="hidden md:block" aria-hidden />
-
-          <div className="flex flex-col items-center text-center">
+          <div className="flex w-full max-w-2xl flex-col items-center justify-self-stretch text-center md:max-w-3xl lg:max-w-4xl">
             <CoverHeaderContent project={project} compact={Boolean(cover)} />
           </div>
 
@@ -431,26 +506,57 @@ function MagazineCover({
   )
 }
 
+const CHAPTER_HEADER_EASE = [0.22, 1, 0.36, 1] as const
+
+const chapterHeaderContainerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.07, delayChildren: 0.04 },
+  },
+}
+
+const chapterHeaderItemVariants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: CHAPTER_HEADER_EASE },
+  },
+}
+
 function ChapterOpener({
+  scrollRootRef,
   id,
   index,
   name,
   backdrop,
+  chapters,
+  onChapterClick,
+  onContentsClick,
 }: {
+  scrollRootRef: React.RefObject<HTMLDivElement | null>
   id: string
   index: number
   name: string
   backdrop?: string
+  chapters: MagazineChapter[]
+  onChapterClick: (id: string) => void
+  onContentsClick: () => void
 }) {
+  const sectionRef = useRef<HTMLElement>(null)
+  const reduceMotion = useReducedMotion()
+  const inView = useInView(sectionRef, {
+    root: scrollRootRef,
+    amount: 0.35,
+    once: false,
+  })
+  const showHeader = reduceMotion === true || inView
   const num = String(index).padStart(2, "0")
 
   return (
     <motion.section
+      ref={sectionRef}
       id={id}
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className="magazine-chapter relative snap-start snap-always min-h-[78dvh] overflow-hidden border-b border-[#222222] md:min-h-[82dvh]"
     >
       {backdrop ? (
@@ -471,7 +577,6 @@ function ChapterOpener({
               alt=""
               fill
               trimWhitespace={false}
-              priority
               sizes="100vw"
               className="object-cover"
             />
@@ -492,30 +597,50 @@ function ChapterOpener({
 
       <div className="relative z-10 flex min-h-[78dvh] flex-col items-center justify-start px-6 pb-14 pt-16 text-center md:min-h-[82dvh] md:px-10 md:pt-20">
         <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.45 }}
-          transition={{ delay: 0.08, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          variants={chapterHeaderContainerVariants}
+          initial="hidden"
+          animate={showHeader ? "visible" : "hidden"}
           className="flex w-full max-w-3xl flex-col items-center"
         >
-          <div className="flex w-full max-w-xs items-center gap-3 md:max-w-sm">
+          <motion.div
+            variants={chapterHeaderItemVariants}
+            className="flex w-full max-w-xs items-center gap-3 md:max-w-sm"
+          >
             <span className="h-px flex-1 bg-white/30" aria-hidden />
             <span className="font-mono text-[10px] uppercase tracking-[0.55em] text-white/80">
               Chapter {num}
             </span>
             <span className="h-px flex-1 bg-white/30" aria-hidden />
-          </div>
+          </motion.div>
 
-          <span className="magazine-chapter-accent mt-5 h-[3px] w-16 md:mt-6 md:w-20" aria-hidden />
+          <motion.span
+            variants={chapterHeaderItemVariants}
+            className="magazine-chapter-accent mt-5 h-[3px] w-16 md:mt-6 md:w-20"
+            aria-hidden
+          />
 
-          <h2 className="mt-5 font-[family-name:var(--font-space-grotesk)] text-[clamp(2rem,6vw,3.75rem)] font-bold uppercase leading-[1.02] tracking-[0.06em] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.65)] md:mt-6">
+          <motion.h2
+            variants={chapterHeaderItemVariants}
+            className="mt-5 font-[family-name:var(--font-space-grotesk)] text-[clamp(2rem,6vw,3.75rem)] font-bold uppercase leading-[1.02] tracking-[0.06em] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.65)] md:mt-6"
+          >
             {name}
-          </h2>
+          </motion.h2>
 
-          <span
+          <motion.span
+            variants={chapterHeaderItemVariants}
             className="magazine-chapter-accent mt-5 h-[3px] w-10 opacity-80 md:mt-6"
             aria-hidden
           />
+
+          <motion.div variants={chapterHeaderItemVariants} className="w-full">
+            <CoverChapterToc
+              chapters={chapters}
+              onChapterClick={onChapterClick}
+              onContentsClick={onContentsClick}
+              activeChapterId={id}
+              variant="opener"
+            />
+          </motion.div>
         </motion.div>
       </div>
     </motion.section>
@@ -575,6 +700,7 @@ function buildMagazineBlocks(project: ClientProject): {
   totalPages: number
 } {
   const sectionLabels = project.sectionLabels
+  const sectionContext = project.sectionContext
   const sections = resolveMagazineSections(project)
 
   const totalPages = sections.reduce((sum, s) => sum + s.images.length, 0)
@@ -586,12 +712,16 @@ function buildMagazineBlocks(project: ClientProject): {
     const section = sections[sIdx]
     const chapterName = sectionChapterName(section, sectionLabels)
 
+    const folderKey = section.folderName ?? section.name
+    const context = resolveSectionContext(folderKey, sectionContext)
+
     blocks.push({
       kind: "chapter",
       name: chapterName,
       index: sIdx + 1,
       id: `chapter-${chapterSlug(chapterName)}`,
       backdrop: section.images.find((item) => item.type === "image")?.src,
+      ...(context ? { context } : {}),
     })
 
     for (let i = 0; i < section.images.length; i++) {
@@ -646,14 +776,19 @@ export function ClientMagazineViewer({ project, onClose }: ClientMagazineViewerP
     () =>
       blocks
         .filter((block): block is Extract<MagazineBlock, { kind: "chapter" }> => block.kind === "chapter")
-        .map((block) => ({ index: block.index, name: block.name, id: block.id })),
+        .map((block) => ({
+          index: block.index,
+          name: block.name,
+          id: block.id,
+          ...(block.context ? { context: block.context } : {}),
+        })),
     [blocks]
   )
   const accentColor = project.accentColor ?? DEFAULT_ACCENT
 
-  const scrollToChapter = useCallback((chapterId: string) => {
+  const scrollToTarget = useCallback((targetId: string) => {
     const container = scrollRef.current
-    const target = document.getElementById(chapterId)
+    const target = document.getElementById(targetId)
     if (!container || !target) return
 
     const top =
@@ -663,6 +798,16 @@ export function ClientMagazineViewer({ project, onClose }: ClientMagazineViewerP
 
     container.scrollTo({ top, behavior: "smooth" })
   }, [])
+
+  const scrollToChapter = useCallback(
+    (chapterId: string) => scrollToTarget(chapterId),
+    [scrollToTarget]
+  )
+
+  const scrollToCover = useCallback(
+    () => scrollToTarget("magazine-contents"),
+    [scrollToTarget]
+  )
 
   const isOpen = Boolean(container && totalPages > 0)
 
@@ -748,10 +893,14 @@ export function ClientMagazineViewer({ project, onClose }: ClientMagazineViewerP
                 return (
                   <ChapterOpener
                     key={block.id}
+                    scrollRootRef={scrollRef}
                     id={block.id}
                     index={block.index}
                     name={block.name}
                     backdrop={block.backdrop}
+                    chapters={chapters}
+                    onChapterClick={scrollToChapter}
+                    onContentsClick={scrollToCover}
                   />
                 )
               }

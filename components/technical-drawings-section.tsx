@@ -91,7 +91,7 @@ function TechnicalDrawingsSectionInner() {
           className="mb-6 md:mb-8"
         >
           <h3 className="mb-4 font-mono text-xs uppercase tracking-[0.15em] text-[#AAAAAA] md:mb-5">
-            Technical Drawings
+            Shop Drawings
           </h3>
         </motion.div>
 

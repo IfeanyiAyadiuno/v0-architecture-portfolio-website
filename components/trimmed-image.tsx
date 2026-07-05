@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import { trimImageWhitespace } from "@/lib/trim-image-whitespace"
 
@@ -25,6 +25,8 @@ export function TrimmedImage({
   priority = false,
   onLayoutReady,
 }: TrimmedImageProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(priority)
   const [display, setDisplay] = useState<{
     src: string
     width: number
@@ -32,6 +34,30 @@ export function TrimmedImage({
   } | null>(null)
 
   useEffect(() => {
+    if (priority) {
+      setVisible(true)
+      return
+    }
+
+    const el = containerRef.current
+    if (!el) return
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true)
+          io.disconnect()
+        }
+      },
+      { rootMargin: "240px 0px" }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [priority, src])
+
+  useEffect(() => {
+    if (!visible) return
+
     let cancelled = false
 
     async function prepare() {
@@ -73,11 +99,12 @@ export function TrimmedImage({
     return () => {
       cancelled = true
     }
-  }, [src, trimWhitespace])
+  }, [src, trimWhitespace, visible])
 
   if (!display) {
     return (
       <div
+        ref={containerRef}
         className={fill ? `absolute inset-0 ${className ?? ""}` : className}
         style={fill ? undefined : { aspectRatio: "3 / 4", width: "100%" }}
         aria-hidden={fill || !alt}

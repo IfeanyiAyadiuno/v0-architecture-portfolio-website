@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
 import { useLogoClick } from "@/hooks/use-logo-click"
+import { useSectionNavClick } from "@/hooks/use-section-nav-click"
 import { useMounted } from "@/hooks/use-mounted"
 import { SCROLL_THRESHOLD } from "@/lib/scroll-to-top"
 
@@ -35,6 +36,7 @@ export function Navigation() {
   }, [])
 
   const handleLogoClick = useLogoClick()
+  const handleSectionNavClick = useSectionNavClick()
 
   const navLinkClass =
     "group relative font-mono text-sm tracking-[0.05em] text-white transition-opacity hover:opacity-70"
@@ -90,11 +92,19 @@ export function Navigation() {
             ) : null}
             {isCreativeDirector ? (
               <>
-                <Link href="#client-work" className={navLinkClass}>
+                <Link
+                  href="#client-work"
+                  onClick={handleSectionNavClick("client-work")}
+                  className={navLinkClass}
+                >
                   CLIENT WORK
                   <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
                 </Link>
-                <Link href="#art" className={navLinkClass}>
+                <Link
+                  href="#art"
+                  onClick={handleSectionNavClick("art")}
+                  className={navLinkClass}
+                >
                   PERSONAL WORK
                   <span className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-100 bg-white transition-transform" />
                 </Link>

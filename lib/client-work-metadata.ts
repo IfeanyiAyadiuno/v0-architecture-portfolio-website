@@ -13,6 +13,8 @@ type ClientProjectMeta = {
   sectionLabels?: Record<string, string>
   /** Chapter order — exact subfolder names; overrides alphabetical sort */
   sectionOrder?: string[]
+  /** Editorial context for magazine chapter openers — keyed by exact folder name */
+  sectionContext?: Record<string, string>
   /** Looping ambient track — path under public/ */
   ambientAudio?: string
 }
@@ -41,6 +43,14 @@ export const CLIENT_FOLDER_META: Record<string, ClientProjectMeta> = {
       "Runway pictures": "THE RUNWAY",
     },
     sectionOrder: ["Planning", "Setup", "Runway pictures"],
+    sectionContext: {
+      Planning:
+        "Spatial layout, runway pathing, and vendor zones for the Syndicate Collections show.",
+      Setup:
+        "On-site build-out — rigging, lighting grids, seating geometry, and backstage flow before doors open.",
+      "Runway pictures":
+        "The show in motion — runway lighting, model pathing, and the spatial design under live audience load.",
+    },
     ambientAudio: "/art/CLIENT/Syndicate Collection/ambient.mp3",
   },
 }
@@ -61,6 +71,21 @@ export function resolveSectionLabel(
     if (key.toLowerCase() === lower) return label
   }
   return folderName
+}
+
+/** Map a gallery subfolder name to its chapter context copy (case-insensitive fallback). */
+export function resolveSectionContext(
+  folderName: string,
+  sectionContext?: Record<string, string>
+): string | undefined {
+  if (!sectionContext) return undefined
+  const exact = sectionContext[folderName]
+  if (exact) return exact
+  const lower = folderName.toLowerCase()
+  for (const [key, copy] of Object.entries(sectionContext)) {
+    if (key.toLowerCase() === lower) return copy
+  }
+  return undefined
 }
 
 export function metaForFolder(folderName: string): ClientProjectMeta & {

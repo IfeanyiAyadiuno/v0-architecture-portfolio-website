@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { X, ChevronLeft, ChevronRight } from "lucide-react"
 import type { ArtistWork } from "@/lib/data"
+import { useRegisterOverlayClose } from "@/contexts/scroll-scope"
 import { TrimmedImage } from "./trimmed-image"
 
 interface LightboxProps {
@@ -36,6 +37,8 @@ export function Lightbox({ works, currentIndex, onClose, onNext, onPrev, variant
   useLayoutEffect(() => {
     setContainer(document.body)
   }, [])
+
+  useRegisterOverlayClose(onClose, Boolean(container))
 
   useEffect(() => {
     const prev = document.body.style.overflow

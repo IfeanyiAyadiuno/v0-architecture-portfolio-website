@@ -153,16 +153,29 @@ function cropCanvas(
   return trimmed
 }
 
-/**
- * Trims uniform white / light-gray margins from raster images.
- * Returns a data URL when cropping applies; otherwise the original src.
- */
-export async function trimImageWhitespace(src: string): Promise<{
+type TrimResult = {
   src: string
   width: number
   height: number
   trimmed: boolean
-}> {
+}
+
+const trimCache = new Map<string, Promise<TrimResult>>()
+
+/**
+ * Trims uniform white / light-gray margins from raster images.
+ * Returns a data URL when cropping applies; otherwise the original src.
+ */
+export async function trimImageWhitespace(src: string): Promise<TrimResult> {
+  const cached = trimCache.get(src)
+  if (cached) return cached
+
+  const work = trimImageWhitespaceUncached(src)
+  trimCache.set(src, work)
+  return work
+}
+
+async function trimImageWhitespaceUncached(src: string): Promise<TrimResult> {
   let currentSrc = src
   let trimmed = false
 

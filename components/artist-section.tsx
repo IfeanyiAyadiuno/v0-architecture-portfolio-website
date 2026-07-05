@@ -26,6 +26,7 @@ function ArtistVideoStrip({
   const mounted = useMounted()
   const reduceMotion = useReducedMotion()
   const [failed, setFailed] = useState(false)
+  const [loaded, setLoaded] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
 
@@ -50,19 +51,26 @@ function ArtistVideoStrip({
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) tryPlay()
+          if (e.isIntersecting) {
+            if (!loaded) {
+              video.load()
+              setLoaded(true)
+            }
+            tryPlay()
+          } else {
+            video.pause()
+          }
         }
       },
       { threshold: 0.08 }
     )
     io.observe(root)
-    tryPlay()
 
     return () => {
       video.removeEventListener("canplay", onCanPlay)
       io.disconnect()
     }
-  }, [tryPlay])
+  }, [tryPlay, loaded])
 
   return (
     <motion.div
@@ -81,8 +89,8 @@ function ArtistVideoStrip({
             muted
             playsInline
             loop
-            preload="metadata"
-            autoPlay={reduceMotion !== true}
+            preload="none"
+            autoPlay={false}
             onError={() => setFailed(true)}
             aria-label={ariaLabel}
           >
