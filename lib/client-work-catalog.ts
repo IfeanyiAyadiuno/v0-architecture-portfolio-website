@@ -282,8 +282,16 @@ export async function listClientProjects(): Promise<ClientProject[]> {
   return sortProjects(projects)
 }
 
-export const getCachedClientProjects = unstable_cache(
+/** Production: 1h Data Cache. Dev: bypass so new files under `public/art/CLIENT` show immediately. */
+const getCachedClientProjectsCached = unstable_cache(
   listClientProjects,
   ["client-work-projects"],
   { revalidate: 3600 }
 )
+
+export async function getCachedClientProjects(): Promise<ClientProject[]> {
+  if (process.env.NODE_ENV === "development") {
+    return listClientProjects()
+  }
+  return getCachedClientProjectsCached()
+}

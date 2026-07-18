@@ -724,8 +724,14 @@ function buildMagazineBlocks(project: ClientProject): {
       ...(context ? { context } : {}),
     })
 
-    for (let i = 0; i < section.images.length; i++) {
-      const media = section.images[i]!
+    // Videos (and PDFs) first so they sit immediately after the chapter opener.
+    const sectionMedia = [
+      ...section.images.filter((item) => isFullWidthMedia(item)),
+      ...section.images.filter((item) => !isFullWidthMedia(item)),
+    ]
+
+    for (let i = 0; i < sectionMedia.length; i++) {
+      const media = sectionMedia[i]!
 
       if (isFullWidthMedia(media)) {
         blocks.push({
@@ -742,8 +748,8 @@ function buildMagazineBlocks(project: ClientProject): {
 
       const left = media
       const right =
-        i + 1 < section.images.length && !isFullWidthMedia(section.images[i + 1]!)
-          ? section.images[++i]!
+        i + 1 < sectionMedia.length && !isFullWidthMedia(sectionMedia[i + 1]!)
+          ? sectionMedia[++i]!
           : null
       const leftPage = left ? ++pageCounter : null
       const rightPage = right ? ++pageCounter : null
